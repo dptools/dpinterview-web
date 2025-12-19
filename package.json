@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:container": "docker buildx bake -f container/docker-bake.hcl dashboard",
     "start": "next start",
     "lint": "next lint",
     "preview": "next build && next start"
