@@ -86,11 +86,6 @@ export const navData = {
                     url: "/issues/transcriptNotImported",
                     isActive: false,
                 },
-                {
-                    title: "Pipeline Failures",
-                    url: "/issues/pipelineFailures",
-                    isActive: false,
-                },
             ],
         },
         {
