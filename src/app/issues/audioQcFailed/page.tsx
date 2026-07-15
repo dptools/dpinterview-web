@@ -8,6 +8,22 @@ import Link from '@mui/material/Link';
 
 import { FailedAudioQcRow } from '@/lib/types/transcribeme';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+const GROUP_BY_OPTIONS: GroupByOption<FailedAudioQcRow>[] = [
+    { field: 'source_type', label: 'Source' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+    {
+        field: 'aqc_fail_reasons',
+        label: 'Fail Reason',
+        // A row can fail for several reasons at once, so it's counted once per reason
+        // rather than once per distinct reason-combination.
+        extractKeys: (row) => row.aqc_fail_reasons
+            ? Object.entries(row.aqc_fail_reasons).filter(([, failed]) => failed).map(([reason]) => reason)
+            : [],
+    },
+];
 
 function linkFor(row: FailedAudioQcRow): string {
     if (row.source_type === 'audio_journal') {
@@ -91,6 +107,7 @@ export default function AudioQcFailedIssues() {
                     <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                         The following {dataGridProps.rows.length} recordings failed audio QC:
                     </Typography>
+                    <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                     <div className="mt-4">
                         <MuiDataGrid {...dataGridProps} />
                     </div>

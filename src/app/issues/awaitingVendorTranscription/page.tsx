@@ -8,6 +8,14 @@ import Link from '@mui/material/Link';
 
 import { AwaitingVendorRow } from '@/lib/types/transcribeme';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+const GROUP_BY_OPTIONS: GroupByOption<AwaitingVendorRow>[] = [
+    { field: 'source_type', label: 'Source' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+    { field: 'source_language', label: 'Language' },
+];
 
 function linkFor(row: AwaitingVendorRow): string {
     if (row.source_type === 'audio_journal') {
@@ -91,6 +99,11 @@ export default function AwaitingVendorTranscriptionIssues() {
                     <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                         The following {dataGridProps.rows.length} recordings are awaiting a transcript from TranscribeMe:
                     </Typography>
+                    <AggregationSummary
+                        rows={dataGridProps.rows}
+                        groupByOptions={GROUP_BY_OPTIONS}
+                        sumField={{ field: 'hours_waiting', label: 'Hours Waiting' }}
+                    />
                     <div className="mt-4">
                         <MuiDataGrid {...dataGridProps} />
                     </div>

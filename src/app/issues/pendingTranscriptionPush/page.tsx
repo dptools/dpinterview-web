@@ -8,6 +8,13 @@ import Link from '@mui/material/Link';
 
 import { PendingPushRow } from '@/lib/types/transcribeme';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+const GROUP_BY_OPTIONS: GroupByOption<PendingPushRow>[] = [
+    { field: 'source_type', label: 'Source' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+];
 
 function linkFor(row: PendingPushRow): string {
     if (row.source_type === 'audio_journal') {
@@ -85,6 +92,7 @@ export default function PendingTranscriptionPushIssues() {
                     <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                         The following {dataGridProps.rows.length} recordings passed QC but have not been pushed:
                     </Typography>
+                    <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                     <div className="mt-4">
                         <MuiDataGrid {...dataGridProps} />
                     </div>
