@@ -1,14 +1,20 @@
 'use client'
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
+import Button from '@mui/material/Button';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { FailedAudioQcRow } from '@/lib/types/transcribeme';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
 import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+type GridRow = FailedAudioQcRow & { id: number };
 
 const GROUP_BY_OPTIONS: GroupByOption<FailedAudioQcRow>[] = [
     { field: 'source_type', label: 'Source' },
@@ -32,17 +38,79 @@ function linkFor(row: FailedAudioQcRow): string {
     return `/interviews/${row.interview_name}`;
 }
 
+async function overrideAudioQc(row: FailedAudioQcRow): Promise<void> {
+    const response = await fetch('/api/v1/issues/unresolved/audio-qc-failed/override', {
+        method: 'POST',
+        body: JSON.stringify({
+            aqc_source_path: row.aqc_source_path,
+            interview_name: row.source_type === 'interview' ? row.interview_name : undefined,
+            source_type: row.source_type,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to override audio QC');
+    }
+}
+
 export default function AudioQcFailedIssues() {
-    const [dataGridProps, setDataGridProps] = useState<MuiDataGridProps | null>(null);
+    const [rows, setRows] = useState<FailedAudioQcRow[] | null>(null);
+    const [includeOverridden, setIncludeOverridden] = useState(false);
+
+    const loadRows = useCallback(() => {
+        setRows(null);
+        fetch(`/api/v1/issues/unresolved/audio-qc-failed?limit=2000&includeOverridden=${includeOverridden}`)
+            .then((res) => res.json())
+            .then((data) => setRows(data.rows));
+    }, [includeOverridden]);
+
+    useEffect(() => {
+        loadRows();
+    }, [loadRows]);
+
+    const handleOverride = useCallback((row: FailedAudioQcRow) => {
+        const confirmed = window.confirm(
+            `Push "${row.interview_name}" to TranscribeMe despite failing audio QC?\n\n` +
+            'This cannot be undone from the dashboard - once a push runner picks it up, ' +
+            'the file is uploaded to TranscribeMe.'
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        const promise = overrideAudioQc(row).then(() => loadRows());
+        toast.promise(promise, {
+            loading: 'Overriding audio QC...',
+            success: 'Audio QC overridden - will be pushed to TranscribeMe',
+            error: 'Failed to override audio QC',
+        });
+    }, [loadRows]);
 
     const columns: GridColDef[] = React.useMemo(() => [
         {
             field: 'interview_name',
             headerName: 'Name',
-            width: 350,
+            width: 300,
             renderCell: (params) => (
                 <Link href={linkFor(params.row)}>{params.value}</Link>
             )
+        },
+        {
+            field: 'aqc_override',
+            headerName: 'QC Override',
+            width: 140,
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => (
+                params.row.aqc_override ? (
+                    <span>✅ Bypassed</span>
+                ) : (
+                    <Button size="small" onClick={() => handleOverride(params.row)}>
+                        Bypass QC
+                    </Button>
+                )
+            ),
         },
         { field: 'source_type', headerName: 'Source', width: 130 },
         { field: 'subject_id', headerName: 'Subject ID', width: 150 },
@@ -54,27 +122,23 @@ export default function AudioQcFailedIssues() {
             valueGetter: (value) => value ? Object.keys(value).join(', ') : '',
         },
         { field: 'aqc_timestamp', headerName: 'QC Timestamp', width: 200 },
-    ], []);
+    ], [handleOverride]);
 
-    useEffect(() => {
-        fetch('/api/v1/issues/unresolved/audio-qc-failed?limit=2000')
-            .then((res) => res.json())
-            .then((data) => {
-                const gridRows = data.rows.map((row: FailedAudioQcRow, index: number) => ({
-                    id: index,
-                    ...row,
-                }));
+    const gridRows: GridRow[] | null = useMemo(
+        () => rows?.map((row, index) => ({ id: index, ...row })) ?? null,
+        [rows]
+    );
 
-                const props: MuiDataGridProps = {
-                    columns,
-                    rows: gridRows,
-                    height: 670,
-                    pageSizeOptions: [10, 20],
-                    selectable: true
-                };
-                setDataGridProps(props);
-            });
-    }, [columns]);
+    const dataGridProps: MuiDataGridProps | null = useMemo(() => {
+        if (!gridRows) return null;
+        return {
+            columns,
+            rows: gridRows,
+            height: 670,
+            pageSizeOptions: [10, 20],
+            selectable: true,
+        };
+    }, [gridRows, columns]);
 
     return (
         <div className="container mx-auto p-4">
@@ -86,8 +150,15 @@ export default function AudioQcFailedIssues() {
                 Before being sent to TranscribeMe, combined audio is checked for basic
                 quality issues (silence, clipping, DC offset, voice activity). These
                 interviews / audio journals failed that check and are not being
-                transcribed until someone looks at why.
+                transcribed until someone looks at why - or manually overrides the
+                result below.
             </Typography>
+
+            <FormControlLabel
+                control={<Switch checked={includeOverridden} onChange={(e) => setIncludeOverridden(e.target.checked)} />}
+                label="Show overridden files"
+                sx={{ mb: 3 }}
+            />
 
             {!dataGridProps ? (
                 <div className="flex justify-center items-center h-64">

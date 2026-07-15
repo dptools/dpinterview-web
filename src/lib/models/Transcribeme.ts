@@ -36,8 +36,14 @@ const JOURNAL_JOIN = `
 `;
 
 export class Transcribeme {
-    static async getFailedAudioQc(limit: number, offset: number): Promise<{ rows: FailedAudioQcRow[]; totalRows: number }> {
+    static async getFailedAudioQc(
+        limit: number,
+        offset: number,
+        includeOverridden: boolean = false
+    ): Promise<{ rows: FailedAudioQcRow[]; totalRows: number }> {
         const connection = getConnection();
+
+        const overrideFilter = includeOverridden ? "" : "AND aqc.aqc_override IS FALSE";
 
         const baseQuery = `
             SELECT 'interview' AS source_type, i.interview_name, i.subject_id, i.study_id,
@@ -45,7 +51,7 @@ export class Transcribeme {
             FROM transcribeme.wav_conversion wc
             JOIN transcribeme.audio_qc aqc ON aqc.aqc_source_path = wc.wc_destination_path
             ${INTERVIEW_JOIN}
-            WHERE aqc.aqc_passed IS FALSE
+            WHERE aqc.aqc_passed IS FALSE ${overrideFilter}
 
             UNION ALL
 
@@ -54,7 +60,7 @@ export class Transcribeme {
             FROM transcribeme.wav_conversion wc
             JOIN transcribeme.audio_qc aqc ON aqc.aqc_source_path = wc.wc_destination_path
             ${JOURNAL_JOIN}
-            WHERE aqc.aqc_passed IS FALSE
+            WHERE aqc.aqc_passed IS FALSE ${overrideFilter}
         `;
 
         const countResult = await connection.query(`SELECT COUNT(*) FROM (${baseQuery}) AS total`);
@@ -66,6 +72,21 @@ export class Transcribeme {
         );
 
         return { rows: rows as FailedAudioQcRow[], totalRows };
+    }
+
+    // Sets the manual QC override flag. The transcribeme push runners
+    // (dpinterview) pick this up, relocate the file from rejected_audio/ to
+    // pending_audio/, and push it through despite aqc_passed staying FALSE.
+    // One-directional by design - once a push runner grabs the file it's
+    // uploaded to TranscribeMe's SFTP server, an external action that can't
+    // be undone from here.
+    static async setAudioQcOverride(aqc_source_path: string): Promise<void> {
+        const connection = getConnection();
+
+        await connection.query(
+            `UPDATE transcribeme.audio_qc SET aqc_override = TRUE WHERE aqc_source_path = $1`,
+            [aqc_source_path]
+        );
     }
 
     static async getPendingPush(limit: number, offset: number): Promise<{ rows: PendingPushRow[]; totalRows: number }> {
