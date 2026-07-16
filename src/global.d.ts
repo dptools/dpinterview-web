@@ -1,7 +1,7 @@
 // Extends the basic ProcessEnv to include app specific entries
 namespace NodeJS {
     interface ProcessEnv {
-        NODE_ENV?: "development" | "testing" | "staging" | "production";
+        NODE_ENV?: "development" | "test" | "production";
         PG_URL?: string
         PG_user?: string
         PG_host?: string
