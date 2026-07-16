@@ -29,8 +29,52 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Persistent deployment (pm2)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The dashboard runs on a remote machine under [pm2](https://pm2.keymetrics.io/), which keeps the Next.js server alive across SSH disconnects and (once configured) reboots. Config lives in `ecosystem.config.js` at the repo root.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Postgres credentials (`PG_user`, `PG_host`, `PG_database`, `PG_password`, `PG_port`) are read from `.env.local` by `next start` itself — pm2 doesn't need them duplicated in its own env block. `.env.local` is gitignored, so copy it to the remote machine out-of-band (not via git).
+
+### One-time setup on the remote machine
+
+```bash
+npm install -g pm2
+```
+
+### First deploy
+
+```bash
+cd /path/to/dpinterview-web
+npm install
+npm run build
+pm2 start ecosystem.config.js
+```
+
+### Survive reboots
+
+```bash
+pm2 save       # snapshot the currently running process list
+pm2 startup    # prints an OS-specific command — copy/paste and run it (needs sudo once)
+```
+
+Without `pm2 startup`, pm2 keeps the app alive across SSH disconnects but not across a machine reboot.
+
+### Everyday commands
+
+| Task | Command |
+|---|---|
+| List running apps | `pm2 list` |
+| Tail logs | `pm2 logs dpinterview-web` |
+| Restart (e.g. after deploy) | `pm2 restart dpinterview-web` |
+| Stop | `pm2 stop dpinterview-web` |
+| Remove from pm2 | `pm2 delete dpinterview-web` |
+| Live CPU/mem monitor | `pm2 monit` |
+
+### Redeploying a new version
+
+```bash
+git pull
+npm install
+npm run build
+pm2 restart dpinterview-web
+```
