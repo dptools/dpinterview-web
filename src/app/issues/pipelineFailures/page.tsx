@@ -9,6 +9,7 @@ import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Alert from '@mui/joy/Alert';
 
 import { PipelineFailureRow } from '@/lib/types/pipeline_failures';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
@@ -65,15 +66,21 @@ const GROUP_BY_OPTIONS: GroupByOption<PipelineFailureRow>[] = [
     { field: 'pf_resolved', label: 'Resolved' },
 ];
 
+const FETCH_LIMIT = 3000;
+
 export default function PipelineFailuresIssues() {
     const [rows, setRows] = useState<PipelineFailureRow[] | null>(null);
+    const [totalRows, setTotalRows] = useState<number | null>(null);
     const [includeResolved, setIncludeResolved] = useState(false);
 
     const loadRows = useCallback(() => {
         setRows(null);
-        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=3000&includeResolved=${includeResolved}`)
+        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=${FETCH_LIMIT}&includeResolved=${includeResolved}`)
             .then((res) => res.json())
-            .then((data) => setRows(data.rows));
+            .then((data) => {
+                setRows(data.rows);
+                setTotalRows(data.metadata?.totalRows ?? null);
+            });
     }, [includeResolved]);
 
     useEffect(() => {
@@ -166,6 +173,15 @@ export default function PipelineFailuresIssues() {
                 label="Show resolved failures"
                 sx={{ mb: 3 }}
             />
+
+            {totalRows !== null && totalRows >= FETCH_LIMIT && (
+                <Alert variant="soft" color="warning" sx={{ mb: 3 }}>
+                    This page fetches at most {FETCH_LIMIT} rows, and the ledger currently has{' '}
+                    {totalRows}{totalRows > FETCH_LIMIT ? '+' : ''} unresolved failures matching this filter.
+                    Counts and aggregates below may be incomplete — contact a maintainer to raise the limit
+                    or add pagination.
+                </Alert>
+            )}
 
             {!dataGridProps ? (
                 <div className="flex justify-center items-center h-64">

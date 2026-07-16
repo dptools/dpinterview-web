@@ -13,8 +13,15 @@ export async function GET(request: Request): Promise<Response> {
     const limit = Math.min(Math.max(parseInt(url.searchParams.get("limit") ?? "", 10) || 50, 1), 5000);
     const offset = Math.max(parseInt(url.searchParams.get("offset") ?? "", 10) || 0, 0);
     const includeResolved = url.searchParams.get("includeResolved") === "true";
+    const study_id = url.searchParams.get("study_id") ?? undefined;
+    const subject_id = url.searchParams.get("subject_id") ?? undefined;
+    const error_code = url.searchParams.get("errorCode") ?? undefined;
 
-    const { rows, totalRows } = await PipelineFailures.getAll(includeResolved, limit, offset);
+    const { rows, totalRows } = await PipelineFailures.getAll(includeResolved, limit, offset, {
+        study_id,
+        subject_id,
+        error_code,
+    });
 
     const metadata = { totalRows, limit, offset, includeResolved };
 
