@@ -96,6 +96,11 @@ export const navData = {
                     url: "/issues/runsheetMatch",
                     isActive: false,
                 },
+                {
+                    title: "Override Ledger",
+                    url: "/issues/overrideLedger",
+                    isActive: false,
+                },
             ],
         },
         {

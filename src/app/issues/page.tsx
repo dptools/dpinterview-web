@@ -135,6 +135,16 @@ export default function Home() {
                             </Typography>
                         </div>
                     </Link>
+                    <Link href="/issues/overrideLedger" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-rose-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-rose-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                📋 Override Ledger
+                            </Typography>
+                            <Typography level="body-md">
+                                Audit trail of manual overrides (audio QC bypasses, runsheet datetime matches) - which files were addressed and by what mechanism.
+                            </Typography>
+                        </div>
+                    </Link>
                 </div>
 
                 <Typography level="body-md" sx={{ mt: 4, color: 'text.tertiary' }}>
