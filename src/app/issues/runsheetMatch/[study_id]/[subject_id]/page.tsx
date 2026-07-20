@@ -31,6 +31,8 @@ type TimelineEntry = {
     key: string;
     date: string | null;
     interview_type: string;
+    event_name: string | null;
+    interview_name: string;
     status: 'matched' | 'missing';
     label: string;
     missingRow?: InterviewIssue;
@@ -105,6 +107,8 @@ export default function RunsheetMatchDetail({
             key: `matched-${m.interview_name}`,
             date: m.interview_datetime ? new Date(m.interview_datetime).toISOString() : null,
             interview_type: m.interview_type,
+            event_name: null,
+            interview_name: m.interview_name,
             status: 'matched',
             label: m.interview_name,
         }));
@@ -112,6 +116,8 @@ export default function RunsheetMatchDetail({
             key: `missing-${m.interview_name}`,
             date: m.expected_date ? new Date(m.expected_date).toISOString() : null,
             interview_type: m.interview_type,
+            event_name: m.event_name ?? null,
+            interview_name: m.interview_name,
             status: 'missing',
             label: `${m.interview_type} - expected day ${m.expected_day}`,
             missingRow: m,
@@ -211,11 +217,22 @@ export default function RunsheetMatchDetail({
                                                     selected ? 'ring-2 ring-blue-500' : '',
                                                 ].join(' ')}
                                             >
-                                                <div className="flex justify-between">
+                                                <div className="flex justify-between items-start gap-2">
                                                     <span className="font-medium">
                                                         {entry.status === 'matched' ? '✓ Matched' : '○ Missing'} - {entry.interview_type}
+                                                        {entry.event_name && (
+                                                            <span className="text-neutral-500 font-normal"> &middot; {entry.event_name}</span>
+                                                        )}
                                                     </span>
-                                                    <span className="text-neutral-500">{entry.date ? entry.date.slice(0, 10) : 'unknown date'}</span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="text-neutral-500">{entry.date ? entry.date.slice(0, 10) : 'unknown date'}</span>
+                                                        <Link
+                                                            href={`/interviews/${entry.interview_name}`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            View
+                                                        </Link>
+                                                    </div>
                                                 </div>
                                                 <div className="text-neutral-600">{entry.label}</div>
                                             </div>
@@ -273,7 +290,7 @@ export default function RunsheetMatchDetail({
                             <Typography level="body-sm" sx={{ mb: 1 }} className="font-mono">{selectedFailure.pf_identifier}</Typography>
                             <Typography level="body-sm" sx={{ mb: 2 }}>
                                 {selectedMissing
-                                    ? `Matched to: ${selectedMissing.interview_type} (expected day ${selectedMissing.expected_day})`
+                                    ? `Matched to: ${selectedMissing.interview_type} - ${selectedMissing.event_name} (expected day ${selectedMissing.expected_day})`
                                     : 'Select a missing runsheet entry on the left, or enter a date directly.'}
                             </Typography>
                             <div className="flex items-center gap-3">
