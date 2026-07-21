@@ -45,6 +45,15 @@ async function overrideAudioQc(row: FailedAudioQcRow): Promise<void> {
             aqc_source_path: row.aqc_source_path,
             interview_name: row.source_type === 'interview' ? row.interview_name : undefined,
             source_type: row.source_type,
+            // Carried into dashboard_actions.da_metadata for the override ledger -
+            // lets reporting group/link without re-joining transcribeme.audio_qc,
+            // and preserves what the automated check found (useful for later
+            // analysis of which QC checks tend to be false positives).
+            study_id: row.study_id,
+            subject_id: row.subject_id,
+            journal_name: row.source_type === 'audio_journal' ? row.interview_name : undefined,
+            aqc_metrics: row.aqc_metrics,
+            aqc_fail_reasons: row.aqc_fail_reasons,
         }),
         headers: { 'Content-Type': 'application/json' },
     });

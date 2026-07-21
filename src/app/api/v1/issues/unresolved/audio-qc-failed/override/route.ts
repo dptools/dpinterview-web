@@ -9,7 +9,16 @@ import { Transcribeme } from "@/lib/models/Transcribeme";
 export async function POST(request: Request): Promise<Response> {
     try {
         const body = await request.json();
-        const { aqc_source_path, interview_name, source_type } = body;
+        const {
+            aqc_source_path,
+            interview_name,
+            source_type,
+            study_id,
+            subject_id,
+            journal_name,
+            aqc_metrics,
+            aqc_fail_reasons,
+        } = body;
         if (!aqc_source_path) {
             return new Response(JSON.stringify({ error: "Missing aqc_source_path parameter" }), {
                 status: 400,
@@ -23,7 +32,19 @@ export async function POST(request: Request): Promise<Response> {
                 interview_name || "unknown",
                 "override_audio_qc",
                 aqc_source_path,
-                source_type || "other"
+                source_type || "other",
+                {
+                    study_id,
+                    subject_id,
+                    // interview_name is the "unknown" placeholder above for audio
+                    // journals (that column is reserved for real interview_name
+                    // values) - journal_name carries the actual identifier so the
+                    // ledger can still link/group audio-journal overrides.
+                    interview_name: interview_name ?? journal_name,
+                    source_type,
+                    aqc_metrics,
+                    aqc_fail_reasons,
+                }
             );
         } catch (e) {
             // If DashboardActions fails, continue but log error

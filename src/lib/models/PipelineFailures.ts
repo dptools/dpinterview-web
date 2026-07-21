@@ -6,22 +6,43 @@ export class PipelineFailures {
     static async getAll(
         includeResolved: boolean,
         limit: number,
-        offset: number
+        offset: number,
+        filters?: { study_id?: string; subject_id?: string; error_code?: string }
     ): Promise<{ rows: PipelineFailureRow[]; totalRows: number }> {
         const connection = getConnection();
 
+        const conditions: string[] = [];
+        const params: (string | number)[] = [];
+
+        if (!includeResolved) {
+            conditions.push("pf_resolved IS FALSE");
+        }
+        if (filters?.study_id) {
+            params.push(filters.study_id);
+            conditions.push(`pf_study_id = $${params.length}`);
+        }
+        if (filters?.subject_id) {
+            params.push(filters.subject_id);
+            conditions.push(`pf_subject_id = $${params.length}`);
+        }
+        if (filters?.error_code) {
+            params.push(filters.error_code);
+            conditions.push(`pf_error_code = $${params.length}`);
+        }
+
+        const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
         const baseQuery = `
             SELECT *
             FROM pipeline_ledger.pipeline_failures
-            ${includeResolved ? "" : "WHERE pf_resolved IS FALSE"}
+            ${whereClause}
         `;
 
-        const countResult = await connection.query(`SELECT COUNT(*) FROM (${baseQuery}) AS total`);
+        const countResult = await connection.query(`SELECT COUNT(*) FROM (${baseQuery}) AS total`, params);
         const totalRows = parseInt(countResult.rows[0].count, 10);
 
         const { rows } = await connection.query(
-            `${baseQuery} ORDER BY pf_last_seen_at DESC LIMIT $1 OFFSET $2`,
-            [limit, offset]
+            `${baseQuery} ORDER BY pf_last_seen_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+            [...params, limit, offset]
         );
 
         return { rows: rows as PipelineFailureRow[], totalRows };

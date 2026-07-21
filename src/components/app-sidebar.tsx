@@ -91,6 +91,16 @@ export const navData = {
                     url: "/issues/pipelineFailures",
                     isActive: false,
                 },
+                {
+                    title: "Runsheet Match",
+                    url: "/issues/runsheetMatch",
+                    isActive: false,
+                },
+                {
+                    title: "Override Ledger",
+                    url: "/issues/overrideLedger",
+                    isActive: false,
+                },
             ],
         },
         {
