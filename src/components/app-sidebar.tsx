@@ -66,6 +66,41 @@ export const navData = {
                     url: "/issues/noTranscript",
                     isActive: false,
                 },
+                {
+                    title: "Failed Audio QC",
+                    url: "/issues/audioQcFailed",
+                    isActive: false,
+                },
+                {
+                    title: "Pending Transcription Push",
+                    url: "/issues/pendingTranscriptionPush",
+                    isActive: false,
+                },
+                {
+                    title: "Awaiting Vendor Transcription",
+                    url: "/issues/awaitingVendorTranscription",
+                    isActive: false,
+                },
+                {
+                    title: "Transcript Not Imported",
+                    url: "/issues/transcriptNotImported",
+                    isActive: false,
+                },
+                {
+                    title: "Pipeline Failures",
+                    url: "/issues/pipelineFailures",
+                    isActive: false,
+                },
+                {
+                    title: "Runsheet Match",
+                    url: "/issues/runsheetMatch",
+                    isActive: false,
+                },
+                {
+                    title: "Override Ledger",
+                    url: "/issues/overrideLedger",
+                    isActive: false,
+                },
             ],
         },
         {

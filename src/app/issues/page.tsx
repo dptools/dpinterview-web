@@ -75,6 +75,76 @@ export default function Home() {
                             </Typography>
                         </div>
                     </Link>
+                    <Link href="/issues/audioQcFailed" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-orange-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-orange-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                🎙️ Failed Audio QC
+                            </Typography>
+                            <Typography level="body-md">
+                                Combined audio that failed pre-transcription QC (silence, clipping, voice activity) and is not being transcribed.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/pendingTranscriptionPush" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-orange-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-orange-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                📤 Pending Transcription Push
+                            </Typography>
+                            <Typography level="body-md">
+                                Audio that passed QC but has not yet been pushed to TranscribeMe.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/awaitingVendorTranscription" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-orange-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-orange-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                ⏳ Awaiting Vendor Transcription
+                            </Typography>
+                            <Typography level="body-md">
+                                Audio pushed to TranscribeMe with no transcript delivered back yet.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/transcriptNotImported" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-orange-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-orange-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                📥 Transcript Not Imported
+                            </Typography>
+                            <Typography level="body-md">
+                                Transcripts delivered by TranscribeMe that have not yet appeared in transcript_files.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/pipelineFailures" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-rose-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-rose-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                🧾 Pipeline Failures
+                            </Typography>
+                            <Typography level="body-md">
+                                Errors raised across pipeline stages/crawlers, with occurrence counts and resolution tracking.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/runsheetMatch" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-rose-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-rose-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                🔗 Runsheet Match
+                            </Typography>
+                            <Typography level="body-md">
+                                Match malformed interview files (datetime_parse failures) to missing runsheet entries, subject by subject.
+                            </Typography>
+                        </div>
+                    </Link>
+                    <Link href="/issues/overrideLedger" underline="none" color="inherit">
+                        <div className="border border-l-4 border-l-rose-400 rounded-lg p-4 hover:shadow-md transition-shadow bg-rose-50/30">
+                            <Typography level="h4" sx={{ mb: 2, color: 'text.secondary' }}>
+                                📋 Override Ledger
+                            </Typography>
+                            <Typography level="body-md">
+                                Audit trail of manual overrides (audio QC bypasses, runsheet datetime matches) - which files were addressed and by what mechanism.
+                            </Typography>
+                        </div>
+                    </Link>
                 </div>
 
                 <Typography level="body-md" sx={{ mt: 4, color: 'text.tertiary' }}>

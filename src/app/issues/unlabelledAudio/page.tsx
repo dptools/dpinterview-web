@@ -7,8 +7,17 @@ import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
 
 import { DbInterview } from '@/lib/types/interview';
+
+type GridRow = { id: string; interview_name: string; interview_type: string; subject_id: string; study_id: string };
+
+const GROUP_BY_OPTIONS: GroupByOption<GridRow>[] = [
+    { field: 'interview_type', label: 'Interview Type' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+];
 
 
 export default function UnlabelledAudioIssues() {
@@ -80,6 +89,7 @@ export default function UnlabelledAudioIssues() {
                 <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                 The following {dataGridProps.rows.length} interviews have atleast one unassigned role from the diarized audio.
                 </Typography>
+                <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />
                 </div>
