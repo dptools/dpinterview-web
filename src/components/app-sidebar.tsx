@@ -66,6 +66,26 @@ export const navData = {
                     url: "/issues/noTranscript",
                     isActive: false,
                 },
+                {
+                    title: "Failed Audio QC",
+                    url: "/issues/audioQcFailed",
+                    isActive: false,
+                },
+                {
+                    title: "Pending Transcription Push",
+                    url: "/issues/pendingTranscriptionPush",
+                    isActive: false,
+                },
+                {
+                    title: "Awaiting Vendor Transcription",
+                    url: "/issues/awaitingVendorTranscription",
+                    isActive: false,
+                },
+                {
+                    title: "Transcript Not Imported",
+                    url: "/issues/transcriptNotImported",
+                    isActive: false,
+                },
             ],
         },
         {

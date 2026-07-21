@@ -15,6 +15,7 @@ import TabPanel from '@mui/joy/TabPanel';
 
 import { DbAudioJournal } from '@/lib/types/audio_journals';
 import Transcript from '@/components/domain/TranscriptE';
+import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipelineStatus';
 
 import { toast } from "sonner";
 
@@ -134,6 +135,7 @@ export default function Page({
                     <Tabs aria-label="Basic tabs" defaultValue={0} sx={{ mt: 3 }}>
                         <TabList>
                             <Tab>📄 Transcript</Tab>
+                            <Tab>🔊 Transcription Pipeline</Tab>
                         </TabList>
                         <TabPanel value={0}>
 
@@ -144,6 +146,18 @@ export default function Page({
                                 study_id={study_id}
                                 currentAudioTime={currenntAudioTime}
                                 updateAudioTime={updateAudioTime}
+                            />
+                        </TabPanel>
+                        <TabPanel value={1}>
+                            <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3, mb: 2 }}>
+                                <strong>Transcription Pipeline</strong>
+                            </Typography>
+
+                            <TranscriptionPipelineStatus
+                                identifier={journal_name}
+                                identifier_type='audio_journal'
+                                study_id={study_id}
+                                subject_id={subject_id}
                             />
                         </TabPanel>
                     </Tabs>

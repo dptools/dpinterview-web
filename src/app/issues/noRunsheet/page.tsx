@@ -9,6 +9,15 @@ import Alert from '@mui/joy/Alert';
 
 import {DbInterview} from '@/lib/types/interview';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+type GridRow = { id: string; interview_name: string; interview_type: string; subject_id: string; study_id: string };
+
+const GROUP_BY_OPTIONS: GroupByOption<GridRow>[] = [
+    { field: 'interview_type', label: 'Interview Type' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+];
 
 export default function MissingRunsheet() {
     const [dataGridProps, setDataGridProps] = useState<MuiDataGridProps | null>(null);
@@ -117,6 +126,7 @@ export default function MissingRunsheet() {
                 <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                 The following {dataGridProps.rows.length} interviews have data uploaded, but no runsheets associated with them.
                 </Typography>
+                <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />
                 </div>
