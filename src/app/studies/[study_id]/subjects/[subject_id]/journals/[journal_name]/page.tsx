@@ -52,7 +52,7 @@ export default function Page({
             setJournalData(data);
         }
         fetchData();
-    }, [study_id, subject_id, journal_name]);
+    }, [study_id, subject_id, journal_name, params]);
 
     React.useEffect(() => {
         if (!journalData) return;

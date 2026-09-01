@@ -17,11 +17,10 @@ interface PageProps {
     }>;
 }
 
-export default async function Page({
+export default function Page({
     params: paramsPromise,
 }: PageProps) {
-    const params = await paramsPromise;
-    const { study_id, subject_id } = params;
+    const { study_id, subject_id } =  React.use(paramsPromise);
 
     return (
         <div className="container mx-auto p-6">
