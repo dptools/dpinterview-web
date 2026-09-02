@@ -108,7 +108,7 @@ export default function SubjectTimelineS(props: SubjectTimelineSProps) {
         
 
         setsubjectTimelineEvents(events);
-    }, [processingData]);
+    }, [processingData, studyId, subjectId]);
 
 
     return (

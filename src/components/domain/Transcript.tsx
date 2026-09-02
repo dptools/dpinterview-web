@@ -88,7 +88,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
             toast.message('Uh oh! Invalid identifier_type.')
             return;
         }
-    }, [identifier, identifier_type]);
+    }, [identifier, identifier_type, study_id, subject_id]);
 
 
     useEffect(() => {

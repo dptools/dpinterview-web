@@ -107,7 +107,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
             toast.message('Uh oh! Invalid identifier_type.')
             return;
         }
-    }, [identifier, identifier_type]);
+    }, [identifier, identifier_type, study_id, subject_id]);
 
     useEffect(() => {
         // Highlight only the most recent parsed line, if currentAudioTime is within the time range of the line
@@ -141,7 +141,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
                 })
             );
         }
-    }, [props.currentAudioTime]);
+    }, [parsedData.length, props.currentAudioTime]);
 
 
     useEffect(() => {

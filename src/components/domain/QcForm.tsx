@@ -60,6 +60,19 @@ export default function QcForm(
     const { interviewName } = props;
     const [ qcData, setQcData ] = useState<DbManualQc | null>(null);
     const [ subjectExpectedInterviews, setSubjectExpectedInterviews ] = useState<DbExpectedInterview[] | null>(null);
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            interviewName: interviewName,
+            hasNoIssues: false,
+            identifiedIssues: [],
+            uploadToNda: false,
+            comments: "",
+            runsheetIdentifier: "",
+            qcDatetime: new Date().toISOString(),
+            qcUser: "",
+        },
+    });
 
     useEffect(() => {
         const fetchInterviewData = async () => {
@@ -113,21 +126,7 @@ export default function QcForm(
             form.setValue("qcUser", qcData.qc_user_id);
         }
         // console.log("Form values after QC data load:", form.getValues());
-    }, [qcData]);
-
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            interviewName: interviewName,
-            hasNoIssues: false,
-            identifiedIssues: [],
-            uploadToNda: false,
-            comments: "",
-            runsheetIdentifier: "",
-            qcDatetime: new Date().toISOString(),
-            qcUser: "",
-        },
-    })
+    }, [form, qcData]);
 
     function handleFormSubmit(values: z.infer<typeof formSchema>) {
         const body = {

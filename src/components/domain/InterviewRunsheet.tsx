@@ -82,7 +82,7 @@ export default function InterviewRunsheet(props: InterviewRunsheetProps) {
         if (formData && dataDictionary.length === 0) {
             fetchDataDictionary(formData.form_name)
         }
-    }, [formData]);
+    }, [dataDictionary.length, formData]);
 
     // Parse the data dictionary and form data
     // Filter out the data dictionary items that are not in the form data
