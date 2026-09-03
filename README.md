@@ -64,8 +64,8 @@ npm install -g pm2
 
 ```bash
 cd /path/to/dpinterview-web
-npm install
-npm run build
+pnpm install
+pnpm build
 pm2 start ecosystem.config.js
 ```
 
@@ -93,7 +93,7 @@ Without `pm2 startup`, pm2 keeps the app alive across SSH disconnects but not ac
 
 ```bash
 git pull
-npm install
-npm run build
+pnpm install
+pnpm build
 pm2 restart dpinterview-web
 ```

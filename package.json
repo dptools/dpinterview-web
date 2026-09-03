@@ -69,7 +69,7 @@
       "onFail": "warn"
     },
     "packageManager": {
-      "name": "npm",
+      "name": "pnpm",
       "version": "^12.0.0",
       "onFail": "warn"
     }
