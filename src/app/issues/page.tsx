@@ -2,9 +2,6 @@ import * as React from 'react';
 import Typography from '@mui/joy/Typography';
 import Link from '@mui/material/Link';
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-export const instant = false;
 
 export default function Home() {
     return (
