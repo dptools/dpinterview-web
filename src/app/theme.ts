@@ -6,7 +6,7 @@ const theme = createTheme({
     cssVariables: true,
     colorSchemes: {
         light: true,
-        dark: true
+        dark: false, // Disabled pending compatibility
     },
     components: {
         MuiTimeline: {
