@@ -23,6 +23,14 @@ export default defineConfig({
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
     },
+    expect: {
+        toHaveScreenshot: {
+            pathTemplate: '{testDir}/__screenshots__{/projectName}/{testFilePath}/{arg}{ext}',
+        },
+        toMatchAriaSnapshot: {
+            pathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
+        }
+    },
 
     /* Configure projects for major browsers */
     projects: [

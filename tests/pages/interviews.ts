@@ -1,28 +1,24 @@
-import {expect, Locator, Page} from '@playwright/test';
+import {Locator, Page} from '@playwright/test';
+import {AbstractPageModel} from "./page";
 
 
-export class InterviewsPageModel {
+export class InterviewsPageModel extends AbstractPageModel {
 
-    readonly breadcrumbs: Locator;
-    readonly sidebar: Locator;
-    readonly main: Locator;
-    readonly page: Page;
+    static readonly path = "/interviews";
+
     readonly selectColumnsButton: Locator;
     readonly filtersButton: Locator;
     readonly densityButton: Locator;
     readonly exportButton: Locator;
 
-    readonly selectRowHeader : Locator;
+    readonly selectRowHeader: Locator;
     readonly nameColumn: Locator;
     readonly typeColumn: Locator;
     readonly subjectColumn: Locator;
     readonly studyColumn: Locator;
 
     constructor(page: Page) {
-        this.page = page;
-        this.breadcrumbs = page.locator('header');
-        this.sidebar = page.locator('body');
-        this.main = page.getByRole('main');
+        super(page);
 
         this.selectColumnsButton = page.getByRole('button', {name: 'Select columns'});
         this.filtersButton = page.getByRole('button', {name: 'Show filters'});
@@ -37,7 +33,7 @@ export class InterviewsPageModel {
     }
 
     async goto() {
-        await this.page.goto("/interviews");
+        return this.page.goto(InterviewsPageModel.path);
     }
 
 }

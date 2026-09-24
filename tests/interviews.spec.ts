@@ -3,54 +3,12 @@ import {test} from "./playwright";
 
 test.describe("Interviews page", async () => {
 
-    test('breadcrumbs match snapshot', async ({interviews}) => {
-        await expect(interviews.main).toMatchAriaSnapshot(`
-    - button "Toggle Sidebar":
-      - img
-      - text: ""
-    - navigation "breadcrumb":
-      - list:
-        - listitem:
-          - link "Home":
-            - /url: /
-        - listitem:
-          - link "Interviews" [disabled]
-    `);
+    test("breadcrumbs match snapshot", async ({interviews}) => {
+        await expect(interviews.breadcrumbs).toMatchAriaSnapshot();
     });
 
-    test('sidebar matches snapshot', async ({interviews}) => {
-        await expect(interviews.sidebar).toMatchAriaSnapshot(`
-    - text: Navigation
-    - list:
-      - listitem:
-        - link "Issues":
-          - /url: /issues
-          - img
-          - text: ""
-        - button "Toggle":
-          - img
-          - text: ""
-      - listitem:
-        - link "Interviews":
-          - /url: /interviews
-          - img
-          - text: ""
-        - button "Toggle" [expanded]:
-          - img
-          - text: ""
-        - list:
-          - listitem:
-            - link "Pending QC":
-              - /url: /interviews/qc/pending
-          - listitem:
-            - link "Completed QC":
-              - /url: /interviews/qc/completed
-      - listitem:
-        - link "Audio Journals":
-          - /url: /journals
-          - img
-          - text: ""
-    `);
+    test("sidebar matches snapshot", async ({interviews}) => {
+        await expect(interviews.sidebar).toMatchAriaSnapshot();
     });
 
     test('alert text is present', async ({interviews}) => {
