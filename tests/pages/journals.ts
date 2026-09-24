@@ -1,5 +1,5 @@
 import {Locator, Page} from "@playwright/test";
-import {AbstractPageModel} from "./page";
+import {AbstractPageModel} from "@tests/pages/page";
 
 export class JournalsPage extends AbstractPageModel {
 

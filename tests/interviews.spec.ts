@@ -1,5 +1,5 @@
 import {expect} from '@playwright/test';
-import {test} from "./playwright";
+import {test} from "@tests/playwright";
 
 test.describe("Interviews page", async () => {
 
