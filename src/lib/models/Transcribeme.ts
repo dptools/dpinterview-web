@@ -128,8 +128,7 @@ export class Transcribeme {
 
         const baseQuery = `
             SELECT 'interview' AS source_type, i.interview_name, i.subject_id, i.study_id,
-                tp.transcription_source_path, tp.source_language, tp.sftp_upload_timestamp,
-                EXTRACT(EPOCH FROM (NOW() - tp.sftp_upload_timestamp)) / 3600.0 AS hours_waiting
+                tp.transcription_source_path, tp.source_language, tp.sftp_upload_timestamp
             FROM transcribeme.transcribeme_push tp
             LEFT JOIN transcribeme.wav_conversion wc ON wc.wc_destination_path = tp.transcription_source_path
             ${INTERVIEW_JOIN}
@@ -140,8 +139,7 @@ export class Transcribeme {
             UNION ALL
 
             SELECT 'audio_journal' AS source_type, aj.aj_name AS interview_name, aj.subject_id, aj.study_id,
-                tp.transcription_source_path, tp.source_language, tp.sftp_upload_timestamp,
-                EXTRACT(EPOCH FROM (NOW() - tp.sftp_upload_timestamp)) / 3600.0 AS hours_waiting
+                tp.transcription_source_path, tp.source_language, tp.sftp_upload_timestamp
             FROM transcribeme.transcribeme_push tp
             LEFT JOIN transcribeme.wav_conversion wc ON wc.wc_destination_path = tp.transcription_source_path
             ${JOURNAL_JOIN}
@@ -154,7 +152,7 @@ export class Transcribeme {
         const totalRows = parseInt(countResult.rows[0].count, 10);
 
         const { rows } = await connection.query(
-            `${baseQuery} ORDER BY hours_waiting DESC LIMIT $1 OFFSET $2`,
+            `${baseQuery} ORDER BY sftp_upload_timestamp ASC LIMIT $1 OFFSET $2`,
             [limit, offset]
         );
 

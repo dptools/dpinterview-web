@@ -10,7 +10,9 @@ import { AwaitingVendorRow } from '@/lib/types/transcribeme';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
 import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
 
-const GROUP_BY_OPTIONS: GroupByOption<AwaitingVendorRow>[] = [
+type AwaitingVendorGridRow = AwaitingVendorRow & { id: number; hours_waiting: number };
+
+const GROUP_BY_OPTIONS: GroupByOption<AwaitingVendorGridRow>[] = [
     { field: 'source_type', label: 'Source' },
     { field: 'study_id', label: 'Study ID' },
     { field: 'subject_id', label: 'Subject ID' },
@@ -41,21 +43,18 @@ export default function AwaitingVendorTranscriptionIssues() {
         { field: 'study_id', headerName: 'Study ID', width: 150 },
         { field: 'source_language', headerName: 'Language', width: 120 },
         { field: 'sftp_upload_timestamp', headerName: 'Pushed At', width: 200 },
-        {
-            field: 'hours_waiting',
-            headerName: 'Hours Waiting',
-            width: 140,
-            valueGetter: (value) => typeof value === 'number' ? Math.round(value) : value,
-        },
+        { field: 'hours_waiting', headerName: 'Hours Waiting', width: 140 },
     ], []);
 
     useEffect(() => {
         fetch('/api/v1/issues/unresolved/awaiting-vendor-transcription?limit=2000')
             .then((res) => res.json())
             .then((data) => {
-                const gridRows = data.rows.map((row: AwaitingVendorRow, index: number) => ({
+                const fetchedAt = Date.now();
+                const gridRows: AwaitingVendorGridRow[] = data.rows.map((row: AwaitingVendorRow, index: number) => ({
                     id: index,
                     ...row,
+                    hours_waiting: Math.round((fetchedAt - new Date(row.sftp_upload_timestamp).getTime()) / 3_600_000),
                 }));
 
                 const props: MuiDataGridProps = {
