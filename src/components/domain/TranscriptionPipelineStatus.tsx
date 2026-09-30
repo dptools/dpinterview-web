@@ -62,7 +62,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
     if (!status || !status.wav_conversion) {
         return (
             <div className="m-16">
-                <Empty description="This recording has not entered the AMPSCZ transcription pipeline yet" />
+                <Empty description="This recording has not entered the dpinterview transcription pipeline yet" />
             </div>
         );
     }
