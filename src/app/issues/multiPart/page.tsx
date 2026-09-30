@@ -8,6 +8,15 @@ import Link from '@mui/material/Link';
 
 import { InterviewIssue } from '@/app/api/v1/issues/unresolved/multi-part/route';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+type GridRow = InterviewIssue & { id: string };
+
+const GROUP_BY_OPTIONS: GroupByOption<GridRow>[] = [
+    { field: 'interview_type', label: 'Interview Type' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+];
 
 export default function Issues() {
     const [dataGridProps, setDataGridProps] = useState<MuiDataGridProps | null>(null);
@@ -102,6 +111,11 @@ export default function Issues() {
                 <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                 The following {dataGridProps.rows.length} interviews have multiple parts:
                 </Typography>
+                <AggregationSummary
+                    rows={dataGridProps.rows}
+                    groupByOptions={GROUP_BY_OPTIONS}
+                    sumField={{ field: 'parts_count', label: 'Parts Count' }}
+                />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />
                 </div>

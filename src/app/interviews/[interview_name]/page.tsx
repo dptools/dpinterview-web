@@ -31,6 +31,7 @@ import InterviewRunsheet from '@/components/domain/InterviewRunsheet';
 import QcForm from '@/components/domain/QcForm';
 import Transcript from '@/components/domain/TranscriptE';
 import InterviewPdfReport from '@/components/domain/InterviewPdfReport';
+import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipelineStatus';
 
 const { Paragraph } = AntTypography;
 
@@ -415,6 +416,7 @@ export default function Page({
                                     <Tab>🚩 QC Issues</Tab>
                                     <Tab>📄 PDF Report</Tab>
                                     <Tab>📄 Transcript</Tab>
+                                    <Tab>🔊 Transcription Pipeline</Tab>
                                 </TabList>
                                 <TabPanel value={0}>
                                     <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
@@ -441,10 +443,20 @@ export default function Page({
                                     <InterviewPdfReport interviewName={interview_name} />
                                 </TabPanel>
                                 <TabPanel value={4}>
-                                    <Transcript 
-                                        identifier={interview_name} identifier_type='interview' 
+                                    <Transcript
+                                        identifier={interview_name} identifier_type='interview'
                                         currentAudioTime={currentAudioTime}
                                         updateAudioTime={setCurrentAudioTime}
+                                    />
+                                </TabPanel>
+                                <TabPanel value={5}>
+                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3, mb: 2 }}>
+                                        <strong>Transcription Pipeline</strong>
+                                    </Typography>
+
+                                    <TranscriptionPipelineStatus
+                                        identifier={interview_name}
+                                        identifier_type='interview'
                                     />
                                 </TabPanel>
                             </Tabs>

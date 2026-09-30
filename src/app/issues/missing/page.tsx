@@ -9,6 +9,17 @@ import Alert from '@mui/joy/Alert';
 
 import { InterviewIssue } from '@/app/api/v1/issues/unresolved/missing/route';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
+
+type GridRow = InterviewIssue & { id: string };
+
+const GROUP_BY_OPTIONS: GroupByOption<GridRow>[] = [
+    { field: 'interview_type', label: 'Interview Type' },
+    { field: 'study_id', label: 'Study ID' },
+    { field: 'subject_id', label: 'Subject ID' },
+    { field: 'event_name', label: 'REDCap Event' },
+    { field: 'expected_day', label: 'Expected Day' },
+];
 
 export default function Issues() {
     const [dataGridProps, setDataGridProps] = useState<MuiDataGridProps | null>(null);
@@ -123,6 +134,7 @@ export default function Issues() {
                 <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
                 The following {dataGridProps.rows.length} runsheets no not have any uploaded data:
                 </Typography>
+                <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />
                 </div>
