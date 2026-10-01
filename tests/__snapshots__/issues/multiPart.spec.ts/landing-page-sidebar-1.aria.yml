@@ -1,0 +1,82 @@
+- navigation "sidebar":
+  - list:
+    - listitem:
+      - link "AV QC Portal v0.2.0":
+        - /url: /
+        - img
+        - text: ""
+  - text: Navigation
+  - list:
+    - listitem:
+      - link "Issues":
+        - /url: /issues
+        - img
+        - text: ""
+      - button "Toggle" [expanded]:
+        - img
+        - text: ""
+      - list:
+        - listitem:
+          - link "Multi-Part Interviews":
+            - /url: /issues/multiPart
+        - listitem:
+          - link "Multi-Combined Audio Files":
+            - /url: /issues/multiCombinedAudio
+        - listitem:
+          - link "Unlabelled Audio":
+            - /url: /issues/unlabelledAudio
+        - listitem:
+          - link "Missing Interviews":
+            - /url: /issues/missing
+        - listitem:
+          - link "Missing Runsheets":
+            - /url: /issues/noRunsheet
+        - listitem:
+          - link "Missing Transcripts":
+            - /url: /issues/noTranscript
+        - listitem:
+          - link "Failed Audio QC":
+            - /url: /issues/audioQcFailed
+        - listitem:
+          - link "Pending Transcription Push":
+            - /url: /issues/pendingTranscriptionPush
+        - listitem:
+          - link "Awaiting Vendor Transcription":
+            - /url: /issues/awaitingVendorTranscription
+        - listitem:
+          - link "Transcript Not Imported":
+            - /url: /issues/transcriptNotImported
+        - listitem:
+          - link "Pipeline Failures":
+            - /url: /issues/pipelineFailures
+        - listitem:
+          - link "Runsheet Match":
+            - /url: /issues/runsheetMatch
+        - listitem:
+          - link "Override Ledger":
+            - /url: /issues/overrideLedger
+    - listitem:
+      - link "Interviews":
+        - /url: /interviews
+        - img
+        - text: ""
+      - button "Toggle":
+        - img
+        - text: ""
+    - listitem:
+      - link "Audio Journals":
+        - /url: /journals
+        - img
+        - text: ""
+  - list:
+    - listitem:
+      - link "GitHub":
+        - /url: https://github.com/dheshanm/dpinterview-web
+        - img
+        - text: ""
+    - listitem:
+      - link "Superset":
+        - /url: http://localhost:8088
+        - img
+        - text: ""
+  - button "Toggle Sidebar"

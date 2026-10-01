@@ -1,0 +1,10 @@
+- button "Toggle Sidebar":
+  - img
+  - text: ""
+- navigation "breadcrumb":
+  - list:
+    - listitem:
+      - link "Home":
+        - /url: /
+    - listitem:
+      - link "Audio Journals" [disabled]

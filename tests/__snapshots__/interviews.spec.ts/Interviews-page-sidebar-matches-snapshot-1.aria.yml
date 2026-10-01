@@ -1,0 +1,49 @@
+- navigation "sidebar":
+  - list:
+    - listitem:
+      - link "AV QC Portal v0.2.0":
+        - /url: /
+        - img
+        - text: ""
+  - text: Navigation
+  - list:
+    - listitem:
+      - link "Issues":
+        - /url: /issues
+        - img
+        - text: ""
+      - button "Toggle":
+        - img
+        - text: ""
+    - listitem:
+      - link "Interviews":
+        - /url: /interviews
+        - img
+        - text: ""
+      - button "Toggle" [expanded]:
+        - img
+        - text: ""
+      - list:
+        - listitem:
+          - link "Pending QC":
+            - /url: /interviews/qc/pending
+        - listitem:
+          - link "Completed QC":
+            - /url: /interviews/qc/completed
+    - listitem:
+      - link "Audio Journals":
+        - /url: /journals
+        - img
+        - text: ""
+  - list:
+    - listitem:
+      - link "GitHub":
+        - /url: https://github.com/dheshanm/dpinterview-web
+        - img
+        - text: ""
+    - listitem:
+      - link "Superset":
+        - /url: http://localhost:8088
+        - img
+        - text: ""
+  - button "Toggle Sidebar"

@@ -36,7 +36,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SidebarProvider>
-          <AppSidebar />
+          <AppSidebar aria-label={"sidebar"}/>
           <SidebarInset>
             <AppHeader />
             {/* <ThemeRegistry options={{ key: 'joy' }}> */}
