@@ -71,7 +71,6 @@ export type AwaitingVendorRow = {
     transcription_source_path: string;
     source_language: string;
     sftp_upload_timestamp: Date;
-    hours_waiting: number;
 };
 
 export type TranscriptNotImportedRow = {
