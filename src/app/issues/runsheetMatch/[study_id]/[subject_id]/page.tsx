@@ -1,6 +1,5 @@
-'use client'
-import * as React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+'use client';
+import { useCallback, useEffect, useMemo, useState, use } from 'react';
 import { toast } from 'sonner';
 
 import Typography from '@mui/joy/Typography';
@@ -38,11 +37,12 @@ type TimelineEntry = {
     missingRow?: InterviewIssue;
 };
 
-export default function RunsheetMatchDetail({
-    params,
-}: {
-    params: Promise<{ study_id: string; subject_id: string }>;
-}) {
+export default function RunsheetMatchDetail(
+    props: {
+        params: Promise<{ study_id: string; subject_id: string }>;
+    }
+) {
+    const params = use(props.params);
     const [studyId, setStudyId] = useState<string>('');
     const [subjectId, setSubjectId] = useState<string>('');
     const [failures, setFailures] = useState<PipelineFailureRow[] | null>(null);

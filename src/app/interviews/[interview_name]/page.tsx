@@ -1,7 +1,6 @@
 "use client"
-import * as React from 'react';
+import { SyntheticEvent, useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 import Typography from '@mui/joy/Typography';
 
@@ -122,28 +121,29 @@ function interviewFileOnIgnore(
 }
 
 // ts-ignore
-export default function Page({
-    params,
-}: {
-    params: Promise<{ interview_name: string }>
-}) {
+export default function Page(
+    props: {
+        params: Promise<{ interview_name: string }>
+    }
+) {
+    const params = use(props.params);
     const [interviews, setInterviews] = useState<Interview | null>(null);
     // const [interviewProcessingData, setInterviewProcessingData] = useState<InterviewProcessingData | null>(null);
     const [interview_name, setInterview_name] = useState<string>('');
     const [descriptionItems, setDescriptionItems] = useState<DescriptionsProps['items']>([]);
     const [files, setFiles] = useState<Record<string, Record<string, any>> | null>({});
-    const [loading, setLoading] = React.useState(true);
+    const [loading, setLoading] = useState(true);
 
-    const [lastSelectedItem, setLastSelectedItem] = React.useState<string | null>(
+    const [lastSelectedItem, setLastSelectedItem] = useState<string | null>(
         null,
     );
-    const [selectedFileProps, setSelectedFileProps] = React.useState<FileInfoCardProps | null>(
+    const [selectedFileProps, setSelectedFileProps] = useState<FileInfoCardProps | null>(
         null,
     );
-    const [selectedPartProps, setSelectedPartProps] = React.useState<updateInterviewPartCardProps | null>(
+    const [selectedPartProps, setSelectedPartProps] = useState<updateInterviewPartCardProps | null>(
         null,
     );
-    const [currentAudioTime, setCurrentAudioTime] = React.useState<number>(0);
+    const [currentAudioTime, setCurrentAudioTime] = useState<number>(0);
 
 
     useEffect(() => {
@@ -240,7 +240,7 @@ export default function Page({
     }, [interviews]);
 
     const handleItemSelectionToggle = (
-        event: React.SyntheticEvent,
+        event: SyntheticEvent,
         itemId: string,
         isSelected: boolean,
     ) => {
