@@ -5,12 +5,13 @@ import { SiteJournalRow, SiteStatusRow, StatusSummary as StatusSummaryData } fro
 // Runsheet -> interview links: staff-set links first, then the ±10-day rule (as /issues/missing).
 // Shared by every query here so they all agree on what counts as a match.
 const MATCH_CTES = `
--- Staff-set runsheetIdentifier links (manual_qc holds one row per interview)
+-- Staff-set runsheetIdentifier links (manual_qc holds one row per interview);
+-- the QC form saves an unset identifier as '', which is not a link
 manual_link AS (
-    SELECT mq.qc_data->>'runsheetIdentifier' AS expected_name, mq.qc_target_id AS interview_name
+    SELECT nullif(mq.qc_data->>'runsheetIdentifier', '') AS expected_name, mq.qc_target_id AS interview_name
     FROM manual_qc mq
     WHERE mq.qc_target_type = 'interview'
-        AND mq.qc_data->>'runsheetIdentifier' IS NOT NULL
+        AND nullif(mq.qc_data->>'runsheetIdentifier', '') IS NOT NULL
 ),
 -- ±10-day rule (as /issues/missing), skipping any runsheet or interview a manual link already claims
 rule_link AS (
