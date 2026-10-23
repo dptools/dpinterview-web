@@ -1,6 +1,11 @@
 import { getConnection } from "@/lib/db";
 
-import { SiteJournalRow, SiteStatusRow, StatusSummary as StatusSummaryData } from "@/lib/types/status_summary";
+import {
+    SiteJournalRow,
+    SiteStatusRow,
+    StatusSummary as StatusSummaryData,
+    UnmatchedRow,
+} from "@/lib/types/status_summary";
 
 // Runsheet -> interview links: staff-set links first, then the ±10-day rule (as /issues/missing).
 // Shared by every query here so they all agree on what counts as a match.
@@ -163,6 +168,88 @@ LEFT JOIN no_runsheet nr USING (study_id)
 ORDER BY s.study_id
 `;
 
+// Each unmatched runsheet entry, categorized by the action that would resolve it.
+// First match wins: link_candidate > other_type > unparsed_file > no_trace.
+// $1 optionally restricts to one site.
+const UNMATCHED_QUERY = `
+WITH
+${MATCH_CTES},
+unmatched AS (
+    SELECT e.*
+    FROM expected_interviews e
+    WHERE NOT EXISTS (SELECT 1 FROM candidates c WHERE c.expected_name = e.interview_name)
+        AND ($1::text IS NULL OR e.study_id = $1)
+),
+-- Imported interviews no runsheet entry has claimed, with their first day
+unclaimed AS (
+    SELECT i.interview_name, i.study_id, i.subject_id, i.interview_type, min(ip.interview_day) AS interview_day
+    FROM interviews i
+    JOIN interview_parts ip ON ip.interview_name = i.interview_name
+    WHERE NOT EXISTS (SELECT 1 FROM candidates c WHERE c.interview_name = i.interview_name)
+        AND ($1::text IS NULL OR i.study_id = $1)
+    GROUP BY i.interview_name, i.study_id, i.subject_id, i.interview_type
+),
+evidence AS (
+    SELECT
+        u.*,
+        same_type.interview_name AS same_type_interview,
+        same_type.offset_days AS same_type_offset,
+        other_type.interview_name AS other_type_interview,
+        other_type.offset_days AS other_type_offset,
+        EXISTS (
+            SELECT 1 FROM pipeline_ledger.pipeline_failures pf
+            WHERE pf.pf_study_id = u.study_id AND pf.pf_subject_id = u.subject_id
+                AND NOT pf.pf_resolved AND pf.pf_error_code = 'datetime_parse'
+        ) AS has_unparsed_file
+    FROM unmatched u
+    -- Same-type unclaimed interview, only where this entry is its nearest runsheet entry of that type
+    LEFT JOIN LATERAL (
+        SELECT x.interview_name, abs(x.interview_day - u.expected_interview_day) AS offset_days
+        FROM unclaimed x
+        WHERE x.study_id = u.study_id AND x.subject_id = u.subject_id
+            AND x.interview_type = u.expected_interview_type
+            AND NOT EXISTS (
+                SELECT 1 FROM expected_interviews e2
+                WHERE e2.study_id = x.study_id AND e2.subject_id = x.subject_id
+                    AND e2.expected_interview_type = x.interview_type
+                    AND e2.interview_name <> u.interview_name
+                    AND abs(e2.expected_interview_day - x.interview_day)
+                        < abs(u.expected_interview_day - x.interview_day)
+            )
+        ORDER BY offset_days
+        LIMIT 1
+    ) same_type ON TRUE
+    -- Other-type unclaimed interview within the ±10-day window: likely a mislabelled type
+    LEFT JOIN LATERAL (
+        SELECT x.interview_name, abs(x.interview_day - u.expected_interview_day) AS offset_days
+        FROM unclaimed x
+        WHERE x.study_id = u.study_id AND x.subject_id = u.subject_id
+            AND x.interview_type <> u.expected_interview_type
+            AND abs(x.interview_day - u.expected_interview_day) <= 10
+        ORDER BY offset_days
+        LIMIT 1
+    ) other_type ON TRUE
+)
+SELECT
+    interview_name AS expected_name,
+    study_id AS site,
+    subject_id,
+    expected_interview_type AS interview_type,
+    event_name,
+    expected_interview_date::date::text AS expected_date,
+    expected_interview_day AS expected_day,
+    CASE
+        WHEN same_type_interview IS NOT NULL THEN 'link_candidate'
+        WHEN other_type_interview IS NOT NULL THEN 'other_type'
+        WHEN has_unparsed_file THEN 'unparsed_file'
+        ELSE 'no_trace'
+    END AS category,
+    coalesce(same_type_interview, other_type_interview) AS candidate_interview,
+    coalesce(same_type_offset, other_type_offset)::int AS candidate_offset_days
+FROM evidence
+ORDER BY study_id, subject_id, expected_interview_day
+`;
+
 const SITE_JOURNAL_QUERY = `
 SELECT
     study_id AS site,
@@ -185,4 +272,10 @@ export class StatusSummary {
         return { sites: sitesResult.rows, journals: journalsResult.rows };
     }
 
+    static async getUnmatched(study_id?: string): Promise<UnmatchedRow[]> {
+        const connection = getConnection();
+
+        const result = await connection.query<UnmatchedRow>(UNMATCHED_QUERY, [study_id ?? null]);
+        return result.rows;
+    }
 }

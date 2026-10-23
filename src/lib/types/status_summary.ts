@@ -37,6 +37,43 @@ export type SiteJournalRow = {
     subjects_with_journals: number;
 };
 
+// Unmatched runsheet entries, by the action that would resolve them
+export const UNMATCHED_CATEGORIES = [
+    "link_candidate",
+    "other_type",
+    "unparsed_file",
+    "no_trace",
+] as const;
+
+export type UnmatchedCategory = (typeof UNMATCHED_CATEGORIES)[number];
+
+export const UNMATCHED_CATEGORY_LABELS: Record<UnmatchedCategory, string> = {
+    link_candidate: "Link candidate",
+    other_type: "Other type",
+    unparsed_file: "Unparsed file",
+    no_trace: "No trace",
+};
+
+export const UNMATCHED_CATEGORY_DESCRIPTIONS: Record<UnmatchedCategory, string> = {
+    link_candidate: "An unclaimed interview of the same type is nearest this runsheet entry. Link it on the interview's QC form.",
+    other_type: "An unclaimed interview of the other type sits within 10 days; the type may be mislabelled.",
+    unparsed_file: "The subject has a raw file the crawler couldn't date. Resolve it on Runsheet Match.",
+    no_trace: "Nothing in the pipeline explains the gap. Follow up with the site.",
+};
+
+export type UnmatchedRow = {
+    expected_name: string;
+    site: string;
+    subject_id: string;
+    interview_type: string;
+    event_name: string;
+    expected_date: string;
+    expected_day: number;
+    category: UnmatchedCategory;
+    candidate_interview: string | null;
+    candidate_offset_days: number | null;
+};
+
 export type StatusSummary = {
     sites: SiteStatusRow[];
     journals: SiteJournalRow[];
