@@ -5,9 +5,11 @@ import { useEffect, useMemo, useState } from 'react';
 import Typography from '@mui/joy/Typography';
 import Link from '@mui/material/Link';
 import { GridColDef } from '@mui/x-data-grid';
+import { ChevronRight } from 'lucide-react';
 
 import MuiDataGrid from '@/components/mui/MuiDataGrid';
 import SiteStatusChart, { completionRate } from '@/components/domain/SiteStatusChart';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { INTERVIEW_STATES, INTERVIEW_STATE_LABELS, StatusSummary } from '@/lib/types/status_summary';
 
 function sumBy<T>(rows: T[], pick: (row: T) => number): number {
@@ -41,8 +43,14 @@ const TABLE_COLUMNS: GridColDef[] = [
         width: 150,
         type: 'number',
     })),
+];
+
+// Counts kept out of the completion rate, plus annotations over the expected interviews
+const APPENDIX_COLUMNS: GridColDef[] = [
+    { field: 'site', headerName: 'Site', width: 120 },
     { field: 'no_runsheet', headerName: 'No Runsheet', width: 120, type: 'number' },
     { field: 'declared_missing', headerName: 'Declared Missing', width: 140, type: 'number' },
+    { field: 'not_uploaded', headerName: 'Not Uploaded', width: 130, type: 'number' },
     { field: 'ambiguous_match', headerName: 'Ambiguous Match', width: 140, type: 'number' },
     { field: 'manually_matched', headerName: 'Manually Matched', width: 140, type: 'number' },
 ];
@@ -91,12 +99,12 @@ export default function PipelineStatus() {
                 <Typography level="body-md" sx={{ maxWidth: '800px' }}>
                     Every interview a runsheet expects, in exactly one state. Completed means a transcript
                     has been imported. No usable audio means there is no single combined-audio file for
-                    transcription to take, so the interview won&apos;t progress on its own. Runsheets declared missing and interviews with no runsheet are
-                    counted alongside but kept out of the completion rate.
+                    transcription to take, so the interview won&apos;t progress on its own. Counts kept out of the
+                    completion rate are in the appendix at the bottom.
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="col-span-2 md:col-span-1 rounded-lg border p-4">
                     <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Completion rate</Typography>
                     <div className="text-5xl font-semibold">{expected > 0 ? `${Math.round((completed / expected) * 100)}%` : '—'}</div>
@@ -105,8 +113,6 @@ export default function PipelineStatus() {
                     </Typography>
                 </div>
                 <StatTile label="Unmatched" value={sumBy(sites, (row) => row.unmatched).toLocaleString()} note="By resolution action →" href="/status/unmatched" />
-                <StatTile label="No runsheet" value={sumBy(sites, (row) => row.no_runsheet).toLocaleString()} note="Outside the denominator" />
-                <StatTile label="Declared missing" value={sumBy(sites, (row) => row.declared_missing).toLocaleString()} note="Outside the denominator" />
                 <StatTile
                     label="Newest interview recording"
                     value={summary.newest_recordings.interview ?? '—'}
@@ -131,6 +137,33 @@ export default function PipelineStatus() {
                 <Typography level="h4" sx={{ mb: 2 }}>Table view</Typography>
                 <MuiDataGrid columns={TABLE_COLUMNS} rows={tableRows} height={600} pageSizeOptions={[50, 100]} />
             </div>
+
+            <Collapsible className="border-t pt-4">
+                <CollapsibleTrigger className="group flex items-center gap-2 cursor-pointer">
+                    <ChevronRight className="size-4 transition-transform group-data-[state=open]:rotate-90" />
+                    <Typography level="h4">Appendix: outside the completion rate</Typography>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-4">
+                    <dl className="grid gap-x-6 gap-y-2 text-sm md:grid-cols-[max-content_1fr] max-w-[800px]">
+                        <dt className="font-medium">No runsheet</dt>
+                        <dd className="text-muted-foreground">Imported interviews no runsheet claims.</dd>
+                        <dt className="font-medium">Declared missing</dt>
+                        <dd className="text-muted-foreground">Runsheets marked as missing all their data, with an M1–M6 reason code.</dd>
+                        <dt className="font-medium">Not uploaded</dt>
+                        <dd className="text-muted-foreground">Runsheets neither declared missing nor confirming an upload with a date.</dd>
+                        <dt className="font-medium">Ambiguous / manually matched</dt>
+                        <dd className="text-muted-foreground">Expected interviews matched to several recordings, or linked by hand on the QC form.</dd>
+                    </dl>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <StatTile label="No runsheet" value={sumBy(sites, (row) => row.no_runsheet).toLocaleString()} />
+                        <StatTile label="Declared missing" value={sumBy(sites, (row) => row.declared_missing).toLocaleString()} />
+                        <StatTile label="Not uploaded" value={sumBy(sites, (row) => row.not_uploaded).toLocaleString()} />
+                        <StatTile label="Ambiguous match" value={sumBy(sites, (row) => row.ambiguous_match).toLocaleString()} />
+                        <StatTile label="Manually matched" value={sumBy(sites, (row) => row.manually_matched).toLocaleString()} />
+                    </div>
+                    <MuiDataGrid columns={APPENDIX_COLUMNS} rows={tableRows} height={400} pageSizeOptions={[50, 100]} />
+                </CollapsibleContent>
+            </Collapsible>
         </div>
     );
 }
