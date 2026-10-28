@@ -74,7 +74,14 @@ export type UnmatchedRow = {
     candidate_offset_days: number | null;
 };
 
+// Newest imported recording date (YYYY-MM-DD) of each kind
+export type NewestRecordings = {
+    interview: string | null;
+    journal: string | null;
+};
+
 export type StatusSummary = {
     sites: SiteStatusRow[];
     journals: SiteJournalRow[];
+    newest_recordings: NewestRecordings;
 };

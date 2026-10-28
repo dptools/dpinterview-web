@@ -1,6 +1,7 @@
 import { getConnection } from "@/lib/db";
 
 import {
+    NewestRecordings,
     SiteJournalRow,
     SiteStatusRow,
     StatusSummary as StatusSummaryData,
@@ -260,16 +261,28 @@ GROUP BY study_id
 ORDER BY study_id
 `;
 
+// Recording dates, not arrival times: a stale date means raw data has stopped reaching the crawler
+const NEWEST_RECORDINGS_QUERY = `
+SELECT
+    (SELECT max(interview_datetime)::date::text FROM interview_parts) AS interview,
+    (SELECT max(aj_datetime)::date::text FROM audio_journals) AS journal
+`;
+
 export class StatusSummary {
     static async get(): Promise<StatusSummaryData> {
         const connection = getConnection();
 
-        const [sitesResult, journalsResult] = await Promise.all([
+        const [sitesResult, journalsResult, newestResult] = await Promise.all([
             connection.query<SiteStatusRow>(SITE_STATUS_QUERY),
             connection.query<SiteJournalRow>(SITE_JOURNAL_QUERY),
+            connection.query<NewestRecordings>(NEWEST_RECORDINGS_QUERY),
         ]);
 
-        return { sites: sitesResult.rows, journals: journalsResult.rows };
+        return {
+            sites: sitesResult.rows,
+            journals: journalsResult.rows,
+            newest_recordings: newestResult.rows[0],
+        };
     }
 
     static async getUnmatched(study_id?: string): Promise<UnmatchedRow[]> {

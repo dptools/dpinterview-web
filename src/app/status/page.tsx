@@ -14,6 +14,12 @@ function sumBy<T>(rows: T[], pick: (row: T) => number): number {
     return rows.reduce((total, row) => total + pick(row), 0);
 }
 
+function daysAgo(date: string | null): string {
+    if (!date) return '—';
+    const days = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000);
+    return `${days} days ago`;
+}
+
 function StatTile({ label, value, note, href }: { label: string; value: string; note?: string; href?: string }) {
     const tile = (
         <div className={`rounded-lg border p-4 h-full ${href ? 'hover:shadow-md transition-shadow' : ''}`}>
@@ -89,7 +95,7 @@ export default function PipelineStatus() {
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <div className="col-span-2 md:col-span-1 rounded-lg border p-4">
                     <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Completion rate</Typography>
                     <div className="text-5xl font-semibold">{expected > 0 ? `${Math.round((completed / expected) * 100)}%` : '—'}</div>
@@ -100,6 +106,11 @@ export default function PipelineStatus() {
                 <StatTile label="Unmatched" value={sumBy(sites, (row) => row.unmatched).toLocaleString()} note="By resolution action →" href="/status/unmatched" />
                 <StatTile label="No runsheet" value={sumBy(sites, (row) => row.no_runsheet).toLocaleString()} note="Outside the denominator" />
                 <StatTile label="Declared missing" value={sumBy(sites, (row) => row.declared_missing).toLocaleString()} note="Outside the denominator" />
+                <StatTile
+                    label="Newest interview recording"
+                    value={summary.newest_recordings.interview ?? '—'}
+                    note={`${daysAgo(summary.newest_recordings.interview)} · journals: ${summary.newest_recordings.journal ?? '—'}`}
+                />
                 <StatTile
                     label="Audio journals"
                     value={journals.toLocaleString()}
