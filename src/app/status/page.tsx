@@ -90,7 +90,8 @@ export default function PipelineStatus() {
                 </Typography>
                 <Typography level="body-md" sx={{ maxWidth: '800px' }}>
                     Every interview a runsheet expects, in exactly one state. Completed means a transcript
-                    has been imported. Runsheets declared missing and interviews with no runsheet are
+                    has been imported. No usable audio means there is no single combined-audio file for
+                    transcription to take, so the interview won&apos;t progress on its own. Runsheets declared missing and interviews with no runsheet are
                     counted alongside but kept out of the completion rate.
                 </Typography>
             </div>
