@@ -141,6 +141,21 @@ declared_missing AS (
         OR (form_name = 'psychs_av_recording_run_sheet' AND form_data->>'chrpsychs_av_missing' = '1')
     GROUP BY study_id
 ),
+-- Runsheets neither declared missing nor expected (see 8_import_expected_interviews): upload not confirmed, or no date
+not_uploaded AS (
+    SELECT study_id, count(*)::int AS not_uploaded
+    FROM form_data
+    CROSS JOIN LATERAL (
+        SELECT CASE form_name WHEN 'speech_sampling_run_sheet' THEN 'chrspeech' ELSE 'chrpsychs_av' END AS prefix
+    ) f
+    WHERE form_name IN ('speech_sampling_run_sheet', 'psychs_av_recording_run_sheet')
+        AND coalesce(form_data->>(f.prefix || '_missing'), '') <> '1'
+        AND NOT (
+            coalesce(form_data->>(f.prefix || '_upload') = '1', FALSE)
+            AND form_data->>(f.prefix || '_interview_date') IS NOT NULL
+        )
+    GROUP BY study_id
+),
 -- Imported interviews no runsheet claims (same rule as /issues/noRunsheet)
 no_runsheet AS (
     SELECT i.study_id, count(*)::int AS no_runsheet
@@ -162,6 +177,7 @@ sites AS (
     SELECT study_id FROM site_state
     UNION SELECT study_id FROM declared_missing
     UNION SELECT study_id FROM no_runsheet
+    UNION SELECT study_id FROM not_uploaded
 )
 SELECT
     s.study_id AS site,
@@ -174,11 +190,13 @@ SELECT
     coalesce(ss.no_usable_audio, 0) AS no_usable_audio,
     coalesce(dm.declared_missing, 0) AS declared_missing,
     coalesce(nr.no_runsheet, 0) AS no_runsheet,
+    coalesce(nu.not_uploaded, 0) AS not_uploaded,
     coalesce(ss.ambiguous_match, 0) AS ambiguous_match,
     coalesce(ss.manually_matched, 0) AS manually_matched
 FROM sites s
 LEFT JOIN site_state ss USING (study_id)
 LEFT JOIN declared_missing dm USING (study_id)
+LEFT JOIN not_uploaded nu USING (study_id)
 LEFT JOIN no_runsheet nr USING (study_id)
 ORDER BY s.study_id
 `;

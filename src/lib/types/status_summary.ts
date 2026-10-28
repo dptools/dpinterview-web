@@ -28,6 +28,7 @@ export type SiteStatusRow = Record<InterviewState, number> & {
     // Outside the denominator
     declared_missing: number;
     no_runsheet: number;
+    not_uploaded: number;
     // Annotations over the expected interviews
     ambiguous_match: number;
     manually_matched: number;
