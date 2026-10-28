@@ -10,7 +10,7 @@ import { ChevronRight } from 'lucide-react';
 import MuiDataGrid from '@/components/mui/MuiDataGrid';
 import SiteStatusChart, { completionRate } from '@/components/domain/SiteStatusChart';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { INTERVIEW_STATES, INTERVIEW_STATE_LABELS, StatusSummary } from '@/lib/types/status_summary';
+import { INTERVIEW_STATES, INTERVIEW_STATE_LABELS, SiteStatusRow, StatusSummary } from '@/lib/types/status_summary';
 
 function sumBy<T>(rows: T[], pick: (row: T) => number): number {
     return rows.reduce((total, row) => total + pick(row), 0);
@@ -45,15 +45,51 @@ const TABLE_COLUMNS: GridColDef[] = [
     })),
 ];
 
-// Counts kept out of the completion rate, plus annotations over the expected interviews
+// Counts kept out of the completion rate, plus annotations over the expected interviews,
+// split by whether someone has something to resolve
+const APPENDIX_COUNTS = {
+    needs_action: [
+        { field: 'no_runsheet', label: 'No runsheet', description: 'Imported interviews no runsheet claims.' },
+        { field: 'not_uploaded', label: 'Not uploaded', description: 'Runsheets neither declared missing nor confirming an upload with a date.' },
+        { field: 'ambiguous_match', label: 'Ambiguous match', description: 'Expected interviews matched to several recordings.' },
+    ],
+    reference: [
+        { field: 'declared_missing', label: 'Declared missing', description: 'Runsheets marked as missing all their data, with an M1–M6 reason code.' },
+        { field: 'manually_matched', label: 'Manually matched', description: 'Expected interviews linked by hand on the QC form.' },
+    ],
+} as const satisfies Record<string, { field: keyof SiteStatusRow; label: string; description: string }[]>;
+
 const APPENDIX_COLUMNS: GridColDef[] = [
     { field: 'site', headerName: 'Site', width: 120 },
-    { field: 'no_runsheet', headerName: 'No Runsheet', width: 120, type: 'number' },
-    { field: 'declared_missing', headerName: 'Declared Missing', width: 140, type: 'number' },
-    { field: 'not_uploaded', headerName: 'Not Uploaded', width: 130, type: 'number' },
-    { field: 'ambiguous_match', headerName: 'Ambiguous Match', width: 140, type: 'number' },
-    { field: 'manually_matched', headerName: 'Manually Matched', width: 140, type: 'number' },
+    ...[...APPENDIX_COUNTS.needs_action, ...APPENDIX_COUNTS.reference].map((count): GridColDef => ({
+        field: count.field,
+        headerName: count.label,
+        width: 150,
+        type: 'number',
+    })),
 ];
+
+function AppendixGroup({ title, counts, sites }: {
+    title: string;
+    counts: readonly { field: keyof SiteStatusRow; label: string; description: string }[];
+    sites: SiteStatusRow[];
+}) {
+    return (
+        <div className="space-y-3">
+            <Typography level="title-md">{title}</Typography>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {counts.map((count) => (
+                    <StatTile
+                        key={count.field}
+                        label={count.label}
+                        value={sumBy(sites, (row) => Number(row[count.field])).toLocaleString()}
+                        note={count.description}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export default function PipelineStatus() {
     const [summary, setSummary] = useState<StatusSummary | null>(null);
@@ -83,6 +119,8 @@ export default function PipelineStatus() {
     const completed = sumBy(sites, (row) => row.completed);
     const journals = sumBy(summary.journals, (row) => row.journals);
     const journalSubjects = sumBy(summary.journals, (row) => row.subjects_with_journals);
+
+    const needsAction = sumBy(APPENDIX_COUNTS.needs_action, (count) => sumBy(sites, (row) => Number(row[count.field])));
 
     const tableRows = sites.map((row) => ({
         id: row.site,
@@ -142,25 +180,13 @@ export default function PipelineStatus() {
                 <CollapsibleTrigger className="group flex items-center gap-2 cursor-pointer">
                     <ChevronRight className="size-4 transition-transform group-data-[state=open]:rotate-90" />
                     <Typography level="h4">Appendix: outside the completion rate</Typography>
+                    <Typography level="body-sm" sx={{ color: 'text.secondary' }}>
+                        {needsAction.toLocaleString()} need action
+                    </Typography>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
-                    <dl className="grid gap-x-6 gap-y-2 text-sm md:grid-cols-[max-content_1fr] max-w-[800px]">
-                        <dt className="font-medium">No runsheet</dt>
-                        <dd className="text-muted-foreground">Imported interviews no runsheet claims.</dd>
-                        <dt className="font-medium">Declared missing</dt>
-                        <dd className="text-muted-foreground">Runsheets marked as missing all their data, with an M1–M6 reason code.</dd>
-                        <dt className="font-medium">Not uploaded</dt>
-                        <dd className="text-muted-foreground">Runsheets neither declared missing nor confirming an upload with a date.</dd>
-                        <dt className="font-medium">Ambiguous / manually matched</dt>
-                        <dd className="text-muted-foreground">Expected interviews matched to several recordings, or linked by hand on the QC form.</dd>
-                    </dl>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <StatTile label="No runsheet" value={sumBy(sites, (row) => row.no_runsheet).toLocaleString()} />
-                        <StatTile label="Declared missing" value={sumBy(sites, (row) => row.declared_missing).toLocaleString()} />
-                        <StatTile label="Not uploaded" value={sumBy(sites, (row) => row.not_uploaded).toLocaleString()} />
-                        <StatTile label="Ambiguous match" value={sumBy(sites, (row) => row.ambiguous_match).toLocaleString()} />
-                        <StatTile label="Manually matched" value={sumBy(sites, (row) => row.manually_matched).toLocaleString()} />
-                    </div>
+                <CollapsibleContent className="space-y-6 pt-4">
+                    <AppendixGroup title="Needs action" counts={APPENDIX_COUNTS.needs_action} sites={sites} />
+                    <AppendixGroup title="For reference" counts={APPENDIX_COUNTS.reference} sites={sites} />
                     <MuiDataGrid columns={APPENDIX_COLUMNS} rows={tableRows} height={400} pageSizeOptions={[50, 100]} />
                 </CollapsibleContent>
             </Collapsible>
