@@ -47,7 +47,7 @@ WHERE
         WHERE 
             mq.qc_target_id = i.interview_name
             AND mq.qc_target_type = 'interview'
-            AND mq.qc_data->>'runsheetIdentifier' IS NOT NULL
+            AND nullif(mq.qc_data->>'runsheetIdentifier', '') IS NOT NULL
     )
 GROUP BY  
     i.interview_name,  
