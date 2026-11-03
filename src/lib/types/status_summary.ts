@@ -22,6 +22,15 @@ export const INTERVIEW_STATE_LABELS: Record<InterviewState, string> = {
     no_single_combined_audio: "No single combined audio",
 };
 
+export const INTERVIEW_STATE_DESCRIPTIONS: Record<InterviewState, string> = {
+    completed: "A transcript of the matched recording has been imported.",
+    awaiting_transcribeme: "Audio has been sent to TranscribeMe and the transcript hasn't come back yet.",
+    pending: "The matched recording has the one combined-audio file transcription needs, but it hasn't been sent to TranscribeMe yet.",
+    failed_qc: "The combined audio failed audio QC and hasn't been overridden, so it won't be sent for transcription.",
+    unmatched: "No recording in the pipeline matches this runsheet entry: none of the same subject and type within 10 days, and no manual link.",
+    no_single_combined_audio: "The matched recording has no combined-audio file, or several, so audio QC and transcription can't start on their own.",
+};
+
 export type SiteStatusRow = Record<InterviewState, number> & {
     site: string;
     expected: number;

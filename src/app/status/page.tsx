@@ -10,7 +10,13 @@ import { ChevronRight } from 'lucide-react';
 import MuiDataGrid from '@/components/mui/MuiDataGrid';
 import SiteStatusChart, { completionRate } from '@/components/domain/SiteStatusChart';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { INTERVIEW_STATES, INTERVIEW_STATE_LABELS, SiteStatusRow, StatusSummary } from '@/lib/types/status_summary';
+import {
+    INTERVIEW_STATES,
+    INTERVIEW_STATE_DESCRIPTIONS,
+    INTERVIEW_STATE_LABELS,
+    SiteStatusRow,
+    StatusSummary,
+} from '@/lib/types/status_summary';
 
 function sumBy<T>(rows: T[], pick: (row: T) => number): number {
     return rows.reduce((total, row) => total + pick(row), 0);
@@ -40,6 +46,34 @@ function NoteRow({ label, value, detail }: { label: string; value: string; detai
             <dd className="font-medium text-right">{value}</dd>
             <dd className="text-muted-foreground">{detail}</dd>
         </>
+    );
+}
+
+function StateDefinitions() {
+    return (
+        <Collapsible>
+            <CollapsibleTrigger className="group flex items-center gap-2 cursor-pointer">
+                <ChevronRight className="size-4 transition-transform group-data-[state=open]:rotate-90" />
+                <Typography level="title-sm">What the states mean</Typography>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 max-w-3xl text-sm">
+                    {INTERVIEW_STATES.map((state) => (
+                        <React.Fragment key={state}>
+                            <dt className="inline-flex items-center gap-2 self-start font-medium whitespace-nowrap">
+                                <span className="inline-block size-3 rounded-sm" style={{ background: `var(--state-${state})` }} />
+                                {INTERVIEW_STATE_LABELS[state]}
+                            </dt>
+                            <dd className="text-muted-foreground">{INTERVIEW_STATE_DESCRIPTIONS[state]}</dd>
+                        </React.Fragment>
+                    ))}
+                </dl>
+                <Typography level="body-xs" sx={{ mt: 2, color: 'text.tertiary', maxWidth: '800px' }}>
+                    An interview meeting several descriptions is counted once, in the first that applies:
+                    unmatched, completed, failed QC, awaiting TranscribeMe, no single combined audio, pending.
+                </Typography>
+            </CollapsibleContent>
+        </Collapsible>
     );
 }
 
@@ -145,10 +179,7 @@ export default function PipelineStatus() {
                     Pipeline Status
                 </Typography>
                 <Typography level="body-md" sx={{ maxWidth: '800px' }}>
-                    Every interview a runsheet expects, in exactly one state. Completed means a transcript
-                    has been imported. No single combined audio means there is no one combined-audio file
-                    (none, or several) for transcription to take, so the interview won&apos;t progress on its own.
-                    It is distinct from Failed QC, since audio QC only runs once that file exists. Counts kept out of the
+                    Every interview a runsheet expects, in exactly one state. Counts kept out of the
                     completion rate are in the appendix at the bottom.
                 </Typography>
             </div>
@@ -189,9 +220,12 @@ export default function PipelineStatus() {
 
             <div>
                 <Typography level="h4" sx={{ mb: 1 }}>Expected interviews by site</Typography>
-                <Typography level="body-sm" sx={{ mb: 3, color: 'text.secondary' }}>
+                <Typography level="body-sm" sx={{ mb: 2, color: 'text.secondary' }}>
                     Sorted by completion rate, lowest first. Bar length is the site&apos;s expected count.
                 </Typography>
+                <div className="mb-4">
+                    <StateDefinitions />
+                </div>
                 <SiteStatusChart rows={sortedSites} />
             </div>
 
