@@ -41,21 +41,21 @@ candidates AS (
 
 // One state per runsheet-expected interview. First matching state wins:
 // unmatched > completed > failed_qc > awaiting_transcribeme > no_single_combined_audio > pending.
-// Runsheets marked missing and interviews no runsheet claims are counted per
-// site but kept out of `expected`, so they never move the completion rate.
-const SITE_STATUS_QUERY = `
-WITH
+// Shared by the site summary and the no-single-combined-audio breakdown so their counts agree.
+const STATE_CTES = `
 ${MATCH_CTES},
 matched AS (
     SELECT
         e.interview_name AS expected_name,
         e.study_id,
+        e.subject_id,
+        e.expected_interview_type AS interview_type,
         min(c.interview_name) AS interview_name,
         count(DISTINCT c.interview_name) AS n_candidates,
         coalesce(bool_or(c.match_source = 'manual'), FALSE) AS manual_match
     FROM expected_interviews e
     LEFT JOIN candidates c ON c.expected_name = e.interview_name
-    GROUP BY e.interview_name, e.study_id
+    GROUP BY e.interview_name, e.study_id, e.subject_id, e.expected_interview_type
 ),
 interview_file AS (
     SELECT ip.interview_name, ifi.interview_file
@@ -67,6 +67,7 @@ interview_file AS (
 stage AS (
     SELECT
         m.*,
+        audio.*,
         EXISTS (
             SELECT 1 FROM transcript_files tf
             WHERE tf.identifier_name = m.interview_name AND tf.identifier_type = 'interview'
@@ -90,35 +91,45 @@ stage AS (
                     SELECT 1 FROM transcribeme.transcribeme_pull pull
                     WHERE pull.transcription_destination_path = tp.transcription_destination_path
                 )
-        ) AS awaiting_transcribeme,
-        -- The QC runner (21_qc_interview_audio) only takes an interview with exactly one such file
-        (
-            SELECT count(*)
-            FROM interview_parts ip
-            JOIN interview_files ifi ON ifi.interview_path = ip.interview_path
-            WHERE ip.interview_name = m.interview_name
-                AND NOT coalesce(ifi.ignored, FALSE)
-                AND ip.is_primary AND NOT ip.is_duplicate
-                AND ifi.interview_file_tags LIKE '%audio%'
-                AND ifi.interview_file_tags LIKE '%combined%'
-        ) AS n_combined_audio
+        ) AS awaiting_transcribeme
     FROM matched m
+    -- Audio files by crawler role, primary non-duplicate parts only (as 21_qc_interview_audio)
+    CROSS JOIN LATERAL (
+        SELECT
+            count(*) AS n_audio,
+            count(*) FILTER (WHERE ifi.interview_file_tags LIKE '%combined%') AS n_combined_audio,
+            count(*) FILTER (WHERE ifi.interview_file_tags LIKE '%participant%') AS n_participant_audio,
+            count(*) FILTER (WHERE ifi.interview_file_tags LIKE '%interviewer%') AS n_interviewer_audio
+        FROM interview_parts ip
+        JOIN interview_files ifi ON ifi.interview_path = ip.interview_path
+        WHERE ip.interview_name = m.interview_name
+            AND NOT coalesce(ifi.ignored, FALSE)
+            AND ip.is_primary AND NOT ip.is_duplicate
+            AND ifi.interview_file_tags LIKE '%audio%'
+    ) audio
 ),
 state AS (
     SELECT
-        study_id,
+        stage.*,
         CASE
             WHEN interview_name IS NULL THEN 'unmatched'
             WHEN transcript_imported THEN 'completed'
             WHEN audio_failed_qc THEN 'failed_qc'
             WHEN awaiting_transcribeme THEN 'awaiting_transcribeme'
+            -- The QC runner only takes an interview with exactly one combined file
             WHEN n_combined_audio <> 1 THEN 'no_single_combined_audio'
             ELSE 'pending'
         END AS state,
-        n_candidates > 1 AS ambiguous,
-        manual_match
+        n_candidates > 1 AS ambiguous
     FROM stage
-),
+)
+`;
+
+// Runsheets marked missing and interviews no runsheet claims are counted per
+// site but kept out of `expected`, so they never move the completion rate.
+const SITE_STATUS_QUERY = `
+WITH
+${STATE_CTES},
 site_state AS (
     SELECT
         study_id,
