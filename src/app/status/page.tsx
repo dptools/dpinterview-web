@@ -143,7 +143,7 @@ export default function PipelineStatus() {
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="col-span-2 md:col-span-1 rounded-lg border p-4">
                     <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Completion rate</Typography>
                     <div className="text-5xl font-semibold">{expected > 0 ? `${Math.round((completed / expected) * 100)}%` : '—'}</div>
@@ -152,6 +152,12 @@ export default function PipelineStatus() {
                     </Typography>
                 </div>
                 <StatTile label="Unmatched" value={sumBy(sites, (row) => row.unmatched).toLocaleString()} note="By resolution action →" href="/status/unmatched" />
+                <StatTile
+                    label="No single combined audio"
+                    value={sumBy(sites, (row) => row.no_single_combined_audio).toLocaleString()}
+                    note="By audio present →"
+                    href="/status/noSingleCombined"
+                />
                 <StatTile
                     label="Newest interview recording"
                     value={summary.newest_recordings.interview ?? '—'}

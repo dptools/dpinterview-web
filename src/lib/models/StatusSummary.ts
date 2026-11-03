@@ -5,6 +5,7 @@ import {
     SiteJournalRow,
     SiteStatusRow,
     StatusSummary as StatusSummaryData,
+    NoSingleCombinedRow,
     UnmatchedRow,
 } from "@/lib/types/status_summary";
 
@@ -294,6 +295,35 @@ FROM evidence
 ORDER BY study_id, subject_id, expected_interview_day
 `;
 
+// Each expected interview without a single combined-audio file, categorized by the audio it does have.
+// First match wins: multiple_combined > separate_tracks > one_track > unrecognized_audio > no_audio.
+// $1 optionally restricts to one site.
+const NO_SINGLE_COMBINED_QUERY = `
+WITH
+${STATE_CTES}
+SELECT
+    expected_name,
+    interview_name,
+    study_id AS site,
+    subject_id,
+    interview_type,
+    CASE
+        WHEN n_combined_audio > 1 THEN 'multiple_combined'
+        WHEN n_participant_audio > 0 AND n_interviewer_audio > 0 THEN 'separate_tracks'
+        WHEN n_participant_audio > 0 OR n_interviewer_audio > 0 THEN 'one_track'
+        WHEN n_audio > 0 THEN 'unrecognized_audio'
+        ELSE 'no_audio'
+    END AS category,
+    n_combined_audio::int,
+    n_participant_audio::int,
+    n_interviewer_audio::int,
+    n_audio::int
+FROM state
+WHERE state = 'no_single_combined_audio'
+    AND ($1::text IS NULL OR study_id = $1)
+ORDER BY study_id, subject_id, interview_name
+`;
+
 const SITE_JOURNAL_QUERY = `
 SELECT
     study_id AS site,
@@ -332,6 +362,13 @@ export class StatusSummary {
         const connection = getConnection();
 
         const result = await connection.query<UnmatchedRow>(UNMATCHED_QUERY, [study_id ?? null]);
+        return result.rows;
+    }
+
+    static async getNoSingleCombined(study_id?: string): Promise<NoSingleCombinedRow[]> {
+        const connection = getConnection();
+
+        const result = await connection.query<NoSingleCombinedRow>(NO_SINGLE_COMBINED_QUERY, [study_id ?? null]);
         return result.rows;
     }
 }

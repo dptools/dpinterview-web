@@ -77,6 +77,46 @@ export type UnmatchedRow = {
     candidate_offset_days: number | null;
 };
 
+// Expected interviews without a single combined-audio file, by the audio they do have
+export const NO_SINGLE_COMBINED_CATEGORIES = [
+    "multiple_combined",
+    "separate_tracks",
+    "one_track",
+    "unrecognized_audio",
+    "no_audio",
+] as const;
+
+export type NoSingleCombinedCategory = (typeof NO_SINGLE_COMBINED_CATEGORIES)[number];
+
+export const NO_SINGLE_COMBINED_CATEGORY_LABELS: Record<NoSingleCombinedCategory, string> = {
+    multiple_combined: "Several combined",
+    separate_tracks: "Separate tracks only",
+    one_track: "One track only",
+    unrecognized_audio: "Unrecognized audio",
+    no_audio: "No audio",
+};
+
+export const NO_SINGLE_COMBINED_CATEGORY_DESCRIPTIONS: Record<NoSingleCombinedCategory, string> = {
+    multiple_combined: "More than one combined-audio file, often one per part of a multi-part interview, and the QC runner won't choose between them. Review on Multiple Combined Audio.",
+    separate_tracks: "Participant and interviewer tracks both arrived, but nothing in the pipeline combines them. A combined recording has to come from the site.",
+    one_track: "Only one of the participant or interviewer tracks arrived, and no combined recording. Follow up with the site.",
+    unrecognized_audio: "Audio files the crawler couldn't assign a role. If one is the combined recording, tag it on Unlabelled Audio.",
+    no_audio: "The matched interview has no audio file, or every one is ignored. Follow up with the site.",
+};
+
+export type NoSingleCombinedRow = {
+    expected_name: string;
+    interview_name: string;
+    site: string;
+    subject_id: string;
+    interview_type: string;
+    category: NoSingleCombinedCategory;
+    n_combined_audio: number;
+    n_participant_audio: number;
+    n_interviewer_audio: number;
+    n_audio: number;
+};
+
 // Newest imported recording date (YYYY-MM-DD) of each kind
 export type NewestRecordings = {
     interview: string | null;
