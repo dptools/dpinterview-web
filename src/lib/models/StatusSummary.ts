@@ -40,7 +40,7 @@ candidates AS (
 `;
 
 // One state per runsheet-expected interview. First matching state wins:
-// unmatched > completed > failed_qc > awaiting_transcribeme > no_usable_audio > pending.
+// unmatched > completed > failed_qc > awaiting_transcribeme > no_single_combined_audio > pending.
 // Runsheets marked missing and interviews no runsheet claims are counted per
 // site but kept out of `expected`, so they never move the completion rate.
 const SITE_STATUS_QUERY = `
@@ -112,7 +112,7 @@ state AS (
             WHEN transcript_imported THEN 'completed'
             WHEN audio_failed_qc THEN 'failed_qc'
             WHEN awaiting_transcribeme THEN 'awaiting_transcribeme'
-            WHEN n_combined_audio <> 1 THEN 'no_usable_audio'
+            WHEN n_combined_audio <> 1 THEN 'no_single_combined_audio'
             ELSE 'pending'
         END AS state,
         n_candidates > 1 AS ambiguous,
@@ -128,7 +128,7 @@ site_state AS (
         count(*) FILTER (WHERE state = 'pending')::int AS pending,
         count(*) FILTER (WHERE state = 'failed_qc')::int AS failed_qc,
         count(*) FILTER (WHERE state = 'unmatched')::int AS unmatched,
-        count(*) FILTER (WHERE state = 'no_usable_audio')::int AS no_usable_audio,
+        count(*) FILTER (WHERE state = 'no_single_combined_audio')::int AS no_single_combined_audio,
         count(*) FILTER (WHERE ambiguous)::int AS ambiguous_match,
         count(*) FILTER (WHERE manual_match)::int AS manually_matched
     FROM state
@@ -187,7 +187,7 @@ SELECT
     coalesce(ss.pending, 0) AS pending,
     coalesce(ss.failed_qc, 0) AS failed_qc,
     coalesce(ss.unmatched, 0) AS unmatched,
-    coalesce(ss.no_usable_audio, 0) AS no_usable_audio,
+    coalesce(ss.no_single_combined_audio, 0) AS no_single_combined_audio,
     coalesce(dm.declared_missing, 0) AS declared_missing,
     coalesce(nr.no_runsheet, 0) AS no_runsheet,
     coalesce(nu.not_uploaded, 0) AS not_uploaded,

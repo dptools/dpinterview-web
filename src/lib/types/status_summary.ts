@@ -8,7 +8,7 @@ export const INTERVIEW_STATES = [
     "pending",
     "failed_qc",
     "unmatched",
-    "no_usable_audio",
+    "no_single_combined_audio",
 ] as const;
 
 export type InterviewState = (typeof INTERVIEW_STATES)[number];
@@ -19,7 +19,7 @@ export const INTERVIEW_STATE_LABELS: Record<InterviewState, string> = {
     pending: "Pending",
     failed_qc: "Failed QC",
     unmatched: "Unmatched",
-    no_usable_audio: "No usable audio",
+    no_single_combined_audio: "No single combined audio",
 };
 
 export type SiteStatusRow = Record<InterviewState, number> & {

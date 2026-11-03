@@ -136,8 +136,9 @@ export default function PipelineStatus() {
                 </Typography>
                 <Typography level="body-md" sx={{ maxWidth: '800px' }}>
                     Every interview a runsheet expects, in exactly one state. Completed means a transcript
-                    has been imported. No usable audio means there is no single combined-audio file for
-                    transcription to take, so the interview won&apos;t progress on its own. Counts kept out of the
+                    has been imported. No single combined audio means there is no one combined-audio file
+                    (none, or several) for transcription to take, so the interview won&apos;t progress on its own.
+                    It is distinct from Failed QC, since audio QC only runs once that file exists. Counts kept out of the
                     completion rate are in the appendix at the bottom.
                 </Typography>
             </div>
