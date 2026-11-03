@@ -24,13 +24,23 @@ function daysAgo(date: string | null): string {
 
 function StatTile({ label, value, note, href }: { label: string; value: string; note?: string; href?: string }) {
     const tile = (
-        <div className={`rounded-lg border p-4 h-full ${href ? 'hover:shadow-md transition-shadow' : ''}`}>
+        <div className={`rounded-lg border px-4 py-3 h-full ${href ? 'hover:shadow-md transition-shadow' : ''}`}>
             <Typography level="body-sm" sx={{ color: 'text.secondary' }}>{label}</Typography>
-            <Typography level="h3" sx={{ fontWeight: 600 }}>{value}</Typography>
+            <Typography level="h4" sx={{ fontWeight: 600 }}>{value}</Typography>
             {note && <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>{note}</Typography>}
         </div>
     );
     return href ? <Link href={href} underline="none" color="inherit">{tile}</Link> : tile;
+}
+
+function NoteRow({ label, value, detail }: { label: string; value: string; detail: string }) {
+    return (
+        <>
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="font-medium text-right">{value}</dd>
+            <dd className="text-muted-foreground">{detail}</dd>
+        </>
+    );
 }
 
 const TABLE_COLUMNS: GridColDef[] = [
@@ -143,31 +153,38 @@ export default function PipelineStatus() {
                 </Typography>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="col-span-2 md:col-span-1 rounded-lg border p-4">
-                    <Typography level="body-sm" sx={{ color: 'text.secondary' }}>Completion rate</Typography>
-                    <div className="text-5xl font-semibold">{expected > 0 ? `${Math.round((completed / expected) * 100)}%` : '—'}</div>
-                    <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
-                        {completed.toLocaleString()} of {expected.toLocaleString()} expected
-                    </Typography>
+            <div className="space-y-3">
+                <div className="flex flex-wrap gap-4">
+                    <StatTile
+                        label="Completion rate"
+                        value={expected > 0 ? `${Math.round((completed / expected) * 100)}%` : '—'}
+                        note={`${completed.toLocaleString()} of ${expected.toLocaleString()} expected`}
+                    />
+                    <StatTile label="Unmatched" value={sumBy(sites, (row) => row.unmatched).toLocaleString()} note="By resolution action →" href="/status/unmatched" />
+                    <StatTile
+                        label="No single combined audio"
+                        value={sumBy(sites, (row) => row.no_single_combined_audio).toLocaleString()}
+                        note="By audio present →"
+                        href="/status/noSingleCombined"
+                    />
                 </div>
-                <StatTile label="Unmatched" value={sumBy(sites, (row) => row.unmatched).toLocaleString()} note="By resolution action →" href="/status/unmatched" />
-                <StatTile
-                    label="No single combined audio"
-                    value={sumBy(sites, (row) => row.no_single_combined_audio).toLocaleString()}
-                    note="By audio present →"
-                    href="/status/noSingleCombined"
-                />
-                <StatTile
-                    label="Newest interview recording"
-                    value={summary.newest_recordings.interview ?? '—'}
-                    note={`${daysAgo(summary.newest_recordings.interview)} · journals: ${summary.newest_recordings.journal ?? '—'}`}
-                />
-                <StatTile
-                    label="Audio journals"
-                    value={journals.toLocaleString()}
-                    note={`${journalSubjects.toLocaleString()} subjects · ${journalSubjects > 0 ? (journals / journalSubjects).toFixed(1) : '—'} per subject`}
-                />
+                <dl className="grid grid-cols-[auto_auto_1fr] gap-x-4 gap-y-1 text-sm tabular-nums w-fit">
+                    <NoteRow
+                        label="Newest interview recording"
+                        value={summary.newest_recordings.interview ?? '—'}
+                        detail={daysAgo(summary.newest_recordings.interview)}
+                    />
+                    <NoteRow
+                        label="Newest audio journal"
+                        value={summary.newest_recordings.journal ?? '—'}
+                        detail={daysAgo(summary.newest_recordings.journal)}
+                    />
+                    <NoteRow
+                        label="Audio journals"
+                        value={journals.toLocaleString()}
+                        detail={`from ${journalSubjects.toLocaleString()} subjects, ${journalSubjects > 0 ? (journals / journalSubjects).toFixed(1) : '—'} per subject`}
+                    />
+                </dl>
             </div>
 
             <div>
