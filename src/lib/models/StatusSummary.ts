@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+
 import { getConnection } from "@/lib/db";
 
 import {
@@ -341,34 +343,50 @@ SELECT
     (SELECT max(aj_datetime)::date::text FROM audio_journals) AS journal
 `;
 
+// Each query scans every expected interview, and this is a summary, not a live board.
+// Staff fixes (e.g. a runsheet link) show up once the cached copy expires.
+const CACHE_SECONDS = 3 * 60 * 60;
+
 export class StatusSummary {
-    static async get(): Promise<StatusSummaryData> {
-        const connection = getConnection();
+    static get = unstable_cache(
+        async (): Promise<StatusSummaryData> => {
+            const connection = getConnection();
 
-        const [sitesResult, journalsResult, newestResult] = await Promise.all([
-            connection.query<SiteStatusRow>(SITE_STATUS_QUERY),
-            connection.query<SiteJournalRow>(SITE_JOURNAL_QUERY),
-            connection.query<NewestRecordings>(NEWEST_RECORDINGS_QUERY),
-        ]);
+            const [sitesResult, journalsResult, newestResult] = await Promise.all([
+                connection.query<SiteStatusRow>(SITE_STATUS_QUERY),
+                connection.query<SiteJournalRow>(SITE_JOURNAL_QUERY),
+                connection.query<NewestRecordings>(NEWEST_RECORDINGS_QUERY),
+            ]);
 
-        return {
-            sites: sitesResult.rows,
-            journals: journalsResult.rows,
-            newest_recordings: newestResult.rows[0],
-        };
-    }
+            return {
+                sites: sitesResult.rows,
+                journals: journalsResult.rows,
+                newest_recordings: newestResult.rows[0],
+            };
+        },
+        ['status-summary'],
+        { revalidate: CACHE_SECONDS },
+    );
 
-    static async getUnmatched(study_id?: string): Promise<UnmatchedRow[]> {
-        const connection = getConnection();
+    static getUnmatched = unstable_cache(
+        async (study_id?: string): Promise<UnmatchedRow[]> => {
+            const connection = getConnection();
 
-        const result = await connection.query<UnmatchedRow>(UNMATCHED_QUERY, [study_id ?? null]);
-        return result.rows;
-    }
+            const result = await connection.query<UnmatchedRow>(UNMATCHED_QUERY, [study_id ?? null]);
+            return result.rows;
+        },
+        ['status-unmatched'],
+        { revalidate: CACHE_SECONDS },
+    );
 
-    static async getNoSingleCombined(study_id?: string): Promise<NoSingleCombinedRow[]> {
-        const connection = getConnection();
+    static getNoSingleCombined = unstable_cache(
+        async (study_id?: string): Promise<NoSingleCombinedRow[]> => {
+            const connection = getConnection();
 
-        const result = await connection.query<NoSingleCombinedRow>(NO_SINGLE_COMBINED_QUERY, [study_id ?? null]);
-        return result.rows;
-    }
+            const result = await connection.query<NoSingleCombinedRow>(NO_SINGLE_COMBINED_QUERY, [study_id ?? null]);
+            return result.rows;
+        },
+        ['status-no-single-combined'],
+        { revalidate: CACHE_SECONDS },
+    );
 }
