@@ -18,8 +18,8 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 /**
- * Records a staff-confirmed datetime for a raw file/directory that failed to
- * date-parse (a "datetime_parse" pipeline_failures row), after a human has
+ * Records a staff-confirmed datetime for a raw file/directory the crawler could
+ * not date (a "datetime_parse" or "loose_file" pipeline_failures row), after a human has
  * matched it to a runsheet entry on the Runsheet Match page. Does not mark
  * the pipeline_failures row resolved directly - the Python crawler consumes
  * this override on its next pass, imports the file normally, and resolves

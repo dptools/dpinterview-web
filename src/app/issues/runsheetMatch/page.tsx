@@ -7,7 +7,7 @@ import Alert from '@mui/joy/Alert';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
-import { PipelineFailureRow } from '@/lib/types/pipeline_failures';
+import { PipelineFailureRow, RUNSHEET_MATCH_ERROR_CODES } from '@/lib/types/pipeline_failures';
 import { InterviewIssue } from '@/app/api/v1/issues/unresolved/missing/route';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
 import AggregationSummary, { GroupByOption } from '@/components/mui/AggregationSummary';
@@ -33,7 +33,7 @@ export default function RunsheetMatchIndex() {
     const [missing, setMissing] = useState<InterviewIssue[] | null>(null);
 
     useEffect(() => {
-        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=${FETCH_LIMIT}&includeResolved=false&errorCode=datetime_parse`)
+        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=${FETCH_LIMIT}&includeResolved=false&errorCode=${RUNSHEET_MATCH_ERROR_CODES.join(',')}`)
             .then((res) => res.json())
             .then((data) => setFailures(data.rows));
         fetch(`/api/v1/issues/unresolved/missing?limit=${FETCH_LIMIT}`)
@@ -108,11 +108,12 @@ export default function RunsheetMatchIndex() {
             </Typography>
 
             <Alert variant="soft" color="neutral" sx={{ mb: 4 }}>
-                Subjects with unresolved &quot;datetime_parse&quot; pipeline failures - raw interview
-                files/directories whose names couldn&apos;t be date-parsed, so they were skipped
-                entirely and never imported. These are strong candidates for the &quot;Missing
-                Interviews&quot; on the same subject: matching a malformed file to its runsheet
-                entry recovers it without renaming anything on disk. Click a subject to compare its
+                Subjects with raw interview files the crawler couldn&apos;t date - a file or
+                directory name that couldn&apos;t be date-parsed, or a media file sitting loose in an
+                interview type folder - so they were skipped entirely and never imported. These are
+                strong candidates for the &quot;Missing Interviews&quot; on the same subject: matching
+                such a file to its runsheet entry recovers it without renaming or moving anything on
+                disk. Click a subject to compare its
                 unmatched files against its missing runsheet entries.
             </Alert>
 
@@ -126,13 +127,13 @@ export default function RunsheetMatchIndex() {
             ) : dataGridProps.rows.length === 0 ? (
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
                     <Typography level="body-md">
-                        No subjects with unresolved datetime_parse failures found.
+                        No subjects with unmatched files found.
                     </Typography>
                 </div>
             ) : (
                 <>
                     <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
-                        The following {dataGridProps.rows.length} subjects have unresolved datetime_parse failures:
+                        The following {dataGridProps.rows.length} subjects have unmatched files:
                     </Typography>
 
                     <AggregationSummary

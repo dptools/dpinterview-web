@@ -8,7 +8,7 @@ import Alert from '@mui/joy/Alert';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 
-import { PipelineFailureRow } from '@/lib/types/pipeline_failures';
+import { PipelineFailureErrorCode, PipelineFailureRow, RUNSHEET_MATCH_ERROR_CODES } from '@/lib/types/pipeline_failures';
 import { InterviewIssue } from '@/app/api/v1/issues/unresolved/missing/route';
 import { DbInterviewEnhanced } from '@/lib/types/interview';
 
@@ -20,6 +20,11 @@ function copyToClipboard(text: string) {
 // pf_identifier is a raw path like ".../raw/{subject_id}/interviews/{interview_type}/{leaf}"
 // - the leaf is what failed to parse, but the segment structure above it is
 // reliable, so the interview_type can still be read off the path.
+const UNMATCHED_REASON_LABELS: Partial<Record<PipelineFailureErrorCode, string>> = {
+    datetime_parse: 'unparseable name',
+    loose_file: 'loose file',
+};
+
 function extractInterviewType(pfIdentifier: string): string | null {
     const parts = pfIdentifier.split('/');
     const idx = parts.indexOf('interviews');
@@ -59,7 +64,7 @@ export default function RunsheetMatchDetail({
         setFailures(null);
         setMissing(null);
         setMatched(null);
-        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=3000&includeResolved=false&errorCode=datetime_parse&study_id=${study}&subject_id=${subject}`)
+        fetch(`/api/v1/issues/unresolved/pipeline-failures?limit=3000&includeResolved=false&errorCode=${RUNSHEET_MATCH_ERROR_CODES.join(',')}&study_id=${study}&subject_id=${subject}`)
             .then((res) => res.json())
             .then((data) => setFailures(data.rows));
         fetch(`/api/v1/issues/unresolved/missing?limit=3000&study_id=${study}&subject_id=${subject}`)
@@ -244,10 +249,10 @@ export default function RunsheetMatchDetail({
 
                         <div className="border rounded-lg p-4">
                             <Typography level="title-md" sx={{ mb: 2 }}>
-                                Unmatched files (datetime_parse failures)
+                                Unmatched files
                             </Typography>
                             {unmatchedFiles.length === 0 ? (
-                                <Typography level="body-sm" color="neutral">No unresolved datetime_parse failures for this subject.</Typography>
+                                <Typography level="body-sm" color="neutral">No unmatched files for this subject.</Typography>
                             ) : (
                                 <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
                                     {unmatchedFiles.map((failure) => {
@@ -274,6 +279,7 @@ export default function RunsheetMatchDetail({
                                                 </div>
                                                 <div className="text-neutral-600">
                                                     {extractInterviewType(failure.pf_identifier) ?? 'unknown type'}
+                                                    {' · '}{UNMATCHED_REASON_LABELS[failure.pf_error_code] ?? failure.pf_error_code}
                                                     {pending && ' — pending crawler pickup'}
                                                 </div>
                                             </div>

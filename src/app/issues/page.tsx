@@ -131,7 +131,7 @@ export default function Home() {
                                 🔗 Runsheet Match
                             </Typography>
                             <Typography level="body-md">
-                                Match malformed interview files (datetime_parse failures) to missing runsheet entries, subject by subject.
+                                Match interview files the crawler couldn&apos;t date (unparseable names, loose files) to missing runsheet entries, subject by subject.
                             </Typography>
                         </div>
                     </Link>
