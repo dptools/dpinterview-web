@@ -246,7 +246,7 @@ evidence AS (
         EXISTS (
             SELECT 1 FROM pipeline_ledger.pipeline_failures pf
             WHERE pf.pf_study_id = u.study_id AND pf.pf_subject_id = u.subject_id
-                AND NOT pf.pf_resolved AND pf.pf_error_code = 'datetime_parse'
+                AND NOT pf.pf_resolved AND pf.pf_error_code IN ('datetime_parse', 'loose_file')
         ) AS has_unparsed_file
     FROM unmatched u
     -- Same-type unclaimed interview, only where this entry is its nearest runsheet entry of that type

@@ -62,14 +62,14 @@ export type UnmatchedCategory = (typeof UNMATCHED_CATEGORIES)[number];
 export const UNMATCHED_CATEGORY_LABELS: Record<UnmatchedCategory, string> = {
     link_candidate: "Link candidate",
     other_type: "Other type",
-    unparsed_file: "Unparsed folder",
+    unparsed_file: "Undated raw file",
     no_trace: "No trace",
 };
 
 export const UNMATCHED_CATEGORY_DESCRIPTIONS: Record<UnmatchedCategory, string> = {
     link_candidate: "An unclaimed interview of the same type is nearest this runsheet entry. Link it on the interview's QC form.",
     other_type: "An unclaimed interview of the other type sits within 10 days; the type may be mislabelled.",
-    unparsed_file: "The subject has a raw folder the crawler couldn't date, which may or may not hold this interview. Resolve it on Runsheet Match.",
+    unparsed_file: "The subject has a raw folder or loose file the crawler couldn't date, which may or may not hold this interview. Resolve it on Runsheet Match.",
     no_trace: "Nothing in the pipeline explains the gap. Follow up with the site.",
 };
 
