@@ -13,6 +13,7 @@ export type PipelineFailureIdentifierType =
 
 export type PipelineFailureErrorCode =
     | "datetime_parse"
+    | "loose_file"
     | "subject_id_parse"
     | "filename_parse"
     | "consent_date_missing"
@@ -29,6 +30,10 @@ export type PipelineFailureErrorCode =
     | "interview_not_in_study_list"
     | "crawler_stage_failed"
     | "other";
+
+// Failures the Runsheet Match pages remediate with a datetime override - the codes
+// 2_import_interview_files.py records through override_or_record_failure().
+export const RUNSHEET_MATCH_ERROR_CODES: PipelineFailureErrorCode[] = ["datetime_parse", "loose_file"];
 
 export type PipelineFailureRow = {
     pf_id: number;

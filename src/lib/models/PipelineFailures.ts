@@ -7,12 +7,12 @@ export class PipelineFailures {
         includeResolved: boolean,
         limit: number,
         offset: number,
-        filters?: { study_id?: string; subject_id?: string; error_code?: string }
+        filters?: { study_id?: string; subject_id?: string; error_codes?: string[] }
     ): Promise<{ rows: PipelineFailureRow[]; totalRows: number }> {
         const connection = getConnection();
 
         const conditions: string[] = [];
-        const params: (string | number)[] = [];
+        const params: (string | string[])[] = [];
 
         if (!includeResolved) {
             conditions.push("pf_resolved IS FALSE");
@@ -25,9 +25,9 @@ export class PipelineFailures {
             params.push(filters.subject_id);
             conditions.push(`pf_subject_id = $${params.length}`);
         }
-        if (filters?.error_code) {
-            params.push(filters.error_code);
-            conditions.push(`pf_error_code = $${params.length}`);
+        if (filters?.error_codes?.length) {
+            params.push(filters.error_codes);
+            conditions.push(`pf_error_code = ANY($${params.length})`);
         }
 
         const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

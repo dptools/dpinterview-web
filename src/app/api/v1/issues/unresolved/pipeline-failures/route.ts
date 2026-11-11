@@ -15,12 +15,13 @@ export async function GET(request: Request): Promise<Response> {
     const includeResolved = url.searchParams.get("includeResolved") === "true";
     const study_id = url.searchParams.get("study_id") ?? undefined;
     const subject_id = url.searchParams.get("subject_id") ?? undefined;
-    const error_code = url.searchParams.get("errorCode") ?? undefined;
+    // Comma-separated, e.g. ?errorCode=datetime_parse,loose_file
+    const error_codes = url.searchParams.get("errorCode")?.split(",").filter(Boolean);
 
     const { rows, totalRows } = await PipelineFailures.getAll(includeResolved, limit, offset, {
         study_id,
         subject_id,
-        error_code,
+        error_codes,
     });
 
     const metadata = { totalRows, limit, offset, includeResolved };
