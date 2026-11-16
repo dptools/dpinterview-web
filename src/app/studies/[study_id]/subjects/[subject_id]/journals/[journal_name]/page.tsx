@@ -1,5 +1,5 @@
 "use client"
-import * as React from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 import { Descriptions } from 'antd';
@@ -19,23 +19,24 @@ import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipeli
 
 import { toast } from "sonner";
 
-export default function Page({
-    params,
-}: {
-    params: Promise<{
-        study_id: string;
-        subject_id: string;
-        journal_name: string;
-    }>
-}) {
-    const [study_id, setStudyId] = React.useState<string>('');
-    const [subject_id, setSubjectId] = React.useState<string>('');
-    const [journal_name, setJournalName] = React.useState<string>('');
-    const [journalData, setJournalData] = React.useState<DbAudioJournal | null>(null);
-    const [descriptionItems, setDescriptionItems] = React.useState<DescriptionsProps['items']>([]);
-    const [currenntAudioTime, setCurrentAudioTime] = React.useState<number>(0);
+export default function Page(
+    props: {
+        params: Promise<{
+            study_id: string;
+            subject_id: string;
+            journal_name: string;
+        }>
+    }
+) {
+    const params = use(props.params);
+    const [study_id, setStudyId] = useState<string>('');
+    const [subject_id, setSubjectId] = useState<string>('');
+    const [journal_name, setJournalName] = useState<string>('');
+    const [journalData, setJournalData] = useState<DbAudioJournal | null>(null);
+    const [descriptionItems, setDescriptionItems] = useState<DescriptionsProps['items']>([]);
+    const [currenntAudioTime, setCurrentAudioTime] = useState<number>(0);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchData = async () => {
             const { study_id, subject_id, journal_name } = await params;
             setStudyId(study_id);
@@ -54,7 +55,7 @@ export default function Page({
         fetchData();
     }, [study_id, subject_id, journal_name, params]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!journalData) return;
 
         const items: DescriptionsProps['items'] = [

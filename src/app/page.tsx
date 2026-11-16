@@ -3,6 +3,7 @@ import * as React from 'react';
 import Typography from '@mui/joy/Typography';
 import Link from '@mui/material/Link';
 
+
 export default function Home() {
     return (
         <div className="container mx-auto p-6 max-w-4xl">
