@@ -146,7 +146,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
             {!loading ? (
                 <div className="p-4 max-w-full relative">
                     <div className="bg-white rounded-lg shadow-sm p-6 font-light text-gray-800 leading-relaxed">
-                        <pre className="whitespace-pre-wrap break-words text-base">{transcriptData}</pre>
+                        <pre className="whitespace-pre-wrap wrap-break-word text-base">{transcriptData}</pre>
                     </div>
 
                     {transcriptData && (

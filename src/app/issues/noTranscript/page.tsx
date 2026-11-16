@@ -81,7 +81,7 @@ export default function MissingTranscrips() {
                 </Typography>
                 <div className="space-y-3">
                     <div className="flex gap-2">
-                        <div className="flex-shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
+                        <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
                             <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>1</Typography>
                         </div>
                         <Typography level="body-md">
@@ -89,7 +89,7 @@ export default function MissingTranscrips() {
                         </Typography>
                     </div>
                     <div className="flex gap-2">
-                        <div className="flex-shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
+                        <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
                             <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>2</Typography>
                         </div>
                         <Typography level="body-md">
@@ -97,7 +97,7 @@ export default function MissingTranscrips() {
                         </Typography>
                     </div>
                     <div className="flex gap-2">
-                        <div className="flex-shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
+                        <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
                             <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>3</Typography>
                         </div>
                         <Typography level="body-md">
