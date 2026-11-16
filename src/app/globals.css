@@ -44,6 +44,14 @@
 }
 
 :root {
+  /* Interview status chart: categorical slots 1-5 in state order (validated adjacent, light);
+     no_single_combined_audio is a neutral, validated against all five */
+  --state-completed: #2a78d6;
+  --state-awaiting_transcribeme: #eb6834;
+  --state-pending: #1baf7a;
+  --state-failed_qc: #eda100;
+  --state-unmatched: #e87ba4;
+  --state-no_single_combined_audio: #6f6f6b;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -79,6 +87,12 @@
 }
 
 .dark {
+  --state-completed: #3987e5;
+  --state-awaiting_transcribeme: #d95926;
+  --state-pending: #199e70;
+  --state-failed_qc: #c98500;
+  --state-unmatched: #d55181;
+  --state-no_single_combined_audio: #b0b0ab;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

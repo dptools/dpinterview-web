@@ -3,6 +3,7 @@
 // https://ui.shadcn.com/blocks/sidebar
 import * as React from "react"
 import {
+    ChartBarStacked,
     GalleryVerticalEnd,
     Github,
     LayoutDashboard,
@@ -30,6 +31,18 @@ import { usePathname } from "next/navigation"
 
 export const navData = {
     navMain: [
+        {
+            title: "Pipeline Status",
+            icon: ChartBarStacked,
+            url: "/status",
+            items: [
+                {
+                    title: "Unmatched Runsheets",
+                    url: "/status/unmatched",
+                    isActive: false,
+                },
+            ],
+        },
         {
             title: "Issues",
             icon: MessageSquareWarning,
