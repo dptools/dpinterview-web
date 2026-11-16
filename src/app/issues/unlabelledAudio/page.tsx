@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
@@ -65,30 +64,30 @@ export default function UnlabelledAudioIssues() {
 
     return (
         <div className="container mx-auto p-6">
-            <Typography level="h2" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typeset typeset-h2 mb-2 font-bold text-(--mui-palette-primary.main)"}>
             Interviews with Unlabelled Diarized Audio
-            </Typography>
+            </h2>
 
-            <Typography level="body-md" sx={{ mb: 3, maxWidth: '800px' }}>
+            <p className={"typeset typeset-body-md mb-3 max-w-[800px]"}>
             While the pipeline attempts to label all audio based on filenames, interviews may remain unlabelled if <Link href="https://zenodo.org/records/10475969" target="_blank" rel="noopener noreferrer">standard operating procedures</Link> are not followed.
-            </Typography>
+            </p>
 
             {!dataGridProps ? (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-pulse text-center">
                 <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                <Typography level="body-sm" color="neutral">Loading interview data...</Typography>
+                    <p className={"typeset typeset-body-sm text-neutral-600"}>Loading data...</p>
                 </div>
             </div>
             ) : dataGridProps.rows.length === 0 ? (
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                <Typography level="body-md">No interviews with unlabelled audio found.</Typography>
+                <p className={"typeset typeset-body-md"}>No interviews with unlabelled audio found.</p>
             </div>
             ) : (
             <>
-                <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                <p className={"typeset typeset-body-md mb-2 font-medium text-neutral-600"}>
                 The following {dataGridProps.rows.length} interviews have atleast one unassigned role from the diarized audio.
-                </Typography>
+                </p>
                 <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />

@@ -3,8 +3,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
-
 import Alert from '@mui/material/Alert';
 import Skeleton from '@mui/material/Skeleton';
 import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
@@ -12,10 +10,12 @@ import { TreeItem } from '@mui/x-tree-view/TreeItem';
 
 import Box from '@mui/material/Box';
 
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab from '@mui/joy/Tab';
-import TabPanel from '@mui/joy/TabPanel';
+import {
+    Tabs,
+    TabsList,
+    TabsContent,
+    TabsTrigger
+} from '@/components/ui/tabs';
 
 import { Descriptions } from 'antd';
 import type { DescriptionsProps } from 'antd';
@@ -314,38 +314,38 @@ export default function Page({
                 <CircularProgress color="inherit" />
             </Backdrop> */}
             <div>
-                <Typography level="h4">
+                <h4 className={"typography typography-h4"}>
                     Interview Details
-                </Typography>
+                </h4>
                 {loading ? (
                     <Skeleton variant="text" sx={{ fontSize: '1.5rem' }} />
                 ) : (
                     interview_name && (
-                        <Typography textColor="text.secondary" sx={{ mb: 2 }}>
+                        <p className={"typography text-(--mui-palette-text-secondary) mb-2"}>
                             {interview_name}
-                        </Typography>
+                        </p>
                     )
                 )}
             </div>
 
             {loading ? (
                 <div className='mb-32'>
-                    <Typography level="title-md" sx={{ mb: 3 }}>
+                    <p className={"typeset typeset-title-md mb-3"} >
                         <strong>Interview Info</strong>
-                    </Typography>
+                    </p>
                     <Skeleton variant="rectangular" sx={{ height: 150 }} />
 
-                    <Typography level="title-lg" sx={{ mt: 3 }}>
+                    <p className={"typeset typeset-title-lg mt-3"} >
                         <strong>Interview Parts</strong>
-                    </Typography>
+                    </p>
 
                     <div>
                         <Skeleton variant="text" sx={{ fontSize: '3rem' }} />
                     </div>
 
-                    <Typography level="title-lg" sx={{ mt: 3 }}>
+                    <p className={"typeset typeset-title-lg mt-3"} >
                         <strong>Further Information</strong>
-                    </Typography>
+                    </p>
 
                     <Skeleton variant="rectangular" sx={{ height: 400, mt: 4 }} />
                 </div>
@@ -360,9 +360,9 @@ export default function Page({
                             items={descriptionItems}
                         />
 
-                        <Typography level="title-lg" sx={{ mt: 3 }}>
+                        <p className={"typeset typeset-title-lg mt-3"} >
                             <strong>Interview Parts</strong>
-                        </Typography>
+                        </p>
 
                         <div className='m-4'>
                             {lastSelectedItem && files && files[lastSelectedItem] && selectedFileProps?.interview_name && selectedFileProps?.file_path && selectedFileProps?.file_name && selectedFileProps?.file_size_mb && selectedFileProps?.m_time && (
@@ -402,63 +402,62 @@ export default function Page({
                             ))}
                         </SimpleTreeView>
 
-                        <Typography level="title-lg" sx={{ mt: 3 }}>
+                        <p className={"typeset typeset-title-lg mt-3"} >
                             <strong>Further Information</strong>
-                        </Typography>
+                        </p>
 
                         <Box
                         // sx={{ display: { xs: 'block', md: 'none' }}}
                         >
-                            <Tabs aria-label="Basic tabs" defaultValue={0} sx={{ mt: 3 }}>
-                                <TabList>
-                                    <Tab>⏱️ Interview Timeline</Tab>
-                                    <Tab>📝 Run Sheet</Tab>
-                                    <Tab>🚩 QC Issues</Tab>
-                                    <Tab>📄 PDF Report</Tab>
-                                    <Tab>📄 Transcript</Tab>
-                                    <Tab>🔊 Transcription Pipeline</Tab>
-                                </TabList>
-                                <TabPanel value={0}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                            <Tabs aria-label="Basic tabs" defaultValue={"timeline"} className={"mt-3"}>
+                                <TabsList>
+                                    <TabsTrigger value={"timeline"}>⏱️ Interview Timeline</TabsTrigger>
+                                    <TabsTrigger value={"runsSheet"}>📝 Run Sheet</TabsTrigger>
+                                    <TabsTrigger value={"issues"}>🚩 QC Issues</TabsTrigger>
+                                    <TabsTrigger value={"report"}>📄 PDF Report</TabsTrigger>
+                                    <TabsTrigger value={"transcript"}>📄 Transcript</TabsTrigger>
+                                    <TabsTrigger value={"pipeline"}>🔊 Transcription Pipeline</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value={"timeline"}>
+                                    <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                         <strong>Interview Timeline</strong>
-                                    </Typography>
+                                    </p>
 
                                     <InterviewTimelineS interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={1}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                                </TabsContent>
+                                <TabsContent value={"runsSheet"}>
+                                    <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                         <strong>Run Sheet</strong>
-                                    </Typography>
+                                    </p>
 
                                     <InterviewRunsheet interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={2}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                                </TabsContent>
+                                <TabsContent value={"issues"}>
+                                    <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                         <strong>QC Issues</strong>
-                                    </Typography>
+                                    </p>
 
                                     <QcForm interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={3}>
+                                </TabsContent>
+                                <TabsContent value={"report"}>
                                     <InterviewPdfReport interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={4}>
+                                </TabsContent>
+                                <TabsContent value={"transcript"}>
                                     <Transcript
                                         identifier={interview_name} identifier_type='interview'
                                         currentAudioTime={currentAudioTime}
                                         updateAudioTime={setCurrentAudioTime}
                                     />
-                                </TabPanel>
-                                <TabPanel value={5}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3, mb: 2 }}>
+                                </TabsContent>
+                                <TabsContent value={"pipeline"}>
+                                    <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3 mb-2 "}>
                                         <strong>Transcription Pipeline</strong>
-                                    </Typography>
-
+                                    </p>
                                     <TranscriptionPipelineStatus
                                         identifier={interview_name}
                                         identifier_type='interview'
                                     />
-                                </TabPanel>
+                                </TabsContent>
                             </Tabs>
                         </Box>
 
@@ -468,14 +467,14 @@ export default function Page({
                             sx={{ width: '100%', display: { xs: 'none', md: 'flex' } }}
                         >
                             <Box sx={{ width: '50%' }}>
-                                <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                     <strong>Interview Timeline</strong>
                                 </Typography>
 
                                 <InterviewTimelineS interviewName={interview_name} />
                             </Box>
                             <Box sx={{ width: '50%' }}>
-                                <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                     <strong>Run Sheet</strong>
                                 </Typography>
 
@@ -494,9 +493,9 @@ export default function Page({
                         </div>
 
                         <div className='mb-32'>
-                            <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
+                            <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
                                 <strong>Run Sheet</strong>
-                            </Typography>
+                            </p>
 
                             <InterviewRunsheet interviewName={interview_name} />
                         </div>

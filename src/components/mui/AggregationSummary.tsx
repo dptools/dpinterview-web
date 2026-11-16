@@ -1,7 +1,6 @@
 'use client'
 import * as React from 'react';
 
-import Typography from '@mui/joy/Typography';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
@@ -71,9 +70,9 @@ export default function AggregationSummary<T>({
     return (
         <div className="mb-6 border rounded-lg p-4 bg-slate-50 max-w-xl">
             <div className="flex items-center gap-3 mb-3">
-                <Typography level="body-md" sx={{ fontWeight: 'medium' }}>
+                <p className={"typeset typeset-body-md font-medium"}>
                     Aggregate by
-                </Typography>
+                </p>
                 <Select
                     size="small"
                     value={String(groupBy)}

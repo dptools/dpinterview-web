@@ -2,10 +2,9 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
-import Alert from '@mui/joy/Alert';
+import {Alert, AlertDescription} from "@/components/ui/alert";
 
 import {DbInterview} from '@/lib/types/interview';
 import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
@@ -65,67 +64,64 @@ export default function MissingTranscrips() {
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 4, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typeset typeset-h2 mb: 4, fontWeight: 'bold', color: 'primary.main'"}>
                 Missing Transcripts
-            </Typography>
+            </h2>
             
-            <Alert
-                variant="soft"
-                color="neutral"
-                size='md'
-                sx={{ mb: 4 }}
-            >
+            <Alert className={"mb-4"}>
+                <AlertDescription>
             <div className="m-4">
-                <Typography level="title-md" sx={{ mb: 2, fontWeight: 'medium' }}>
+                <p className={"typeset typeset-title-md mb: 2, fontWeight: 'medium"}>
                 We expect a transcript for every uploaded interview. If we do not have a transcript, it could be for one of the following reasons:
-                </Typography>
+                </p>
                 <div className="space-y-3">
                     <div className="flex gap-2">
                         <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>1</Typography>
+                            <p className={"typeset typeset-body-sm fontWeight: 'bold"}>1</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className={"typeset typeset-body-md"}>
                         The interview is in WAV format. The transcription pipeline does not work as expected with WAV files.
-                        </Typography>
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>2</Typography>
+                            <p className={"typeset typeset-body-sm fontWeight: 'bold"}>2</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className={"typeset typeset-body-md"}>
                         Interview was in iPad format. The transcription pipeline does not work as expected with iPad files.
-                        </Typography>
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>3</Typography>
+                            <p className={"typeset typeset-body-sm fontWeight: 'bold"}>3</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className={"typeset typeset-body-md"}>
                         The transcription pipeline failed to process the interview. This could be due to a number of reasons.
-                        </Typography>
+                        </p>
                     </div>
                 </div>
             </div>
+                </AlertDescription>
             </Alert>
 
             {!dataGridProps ? (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-pulse text-center">
                 <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                <Typography level="body-sm" color="neutral">Loading interview data...</Typography>
+                <p className={"typeset typeset-body-sm text-neutral-600"}>Loading interview data...</p>
                 </div>
             </div>
             ) : dataGridProps.rows.length === 0 ? (
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                <Typography level="body-md">
+                <p className={"typeset typeset-body-md"}>
                     No interviews with missing transcripts found.
-                </Typography>
+                </p>
             </div>
             ) : (
             <>
-                <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                <p className={"typeset typeset-body-md mb-2 font-medium text-neutral-600"}>
                 The following {dataGridProps.rows.length} interviews have data uploaded, but no transcripts associated with them.
-                </Typography>
+                </p>
                 <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                 <div className="mt-4">
                 <MuiDataGrid {...dataGridProps} />

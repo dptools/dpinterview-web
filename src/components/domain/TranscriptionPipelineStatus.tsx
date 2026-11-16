@@ -6,7 +6,7 @@ import type { DescriptionsProps } from 'antd';
 import { Empty } from 'antd';
 
 import Skeleton from '@mui/material/Skeleton';
-import Chip from '@mui/joy/Chip';
+import {Badge} from "@/components/ui/badge";
 
 import { TranscriptionPipelineStatus as StatusType } from '@/lib/types/transcribeme';
 
@@ -111,7 +111,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>1. WAV Conversion</strong>
-                    <Chip color="success" size="sm">Done</Chip>
+                    <Badge color="success">Done</Badge>
                 </div>
                 <Descriptions bordered size="small" column={1} items={wavConversionItems} />
             </div>
@@ -120,11 +120,11 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
                 <div className="flex items-center gap-2 mb-2">
                     <strong>2. Audio QC</strong>
                     {audio_qc ? (
-                        <Chip color={audio_qc.aqc_passed ? 'success' : 'danger'} size="sm">
+                        <Badge color={audio_qc.aqc_passed ? 'success' : 'danger'}>
                             {audio_qc.aqc_passed ? 'Passed' : 'Failed'}
-                        </Chip>
+                        </Badge>
                     ) : (
-                        <Chip color="neutral" size="sm">Not Run</Chip>
+                        <Badge color="neutral">Not Run</Badge>
                     )}
                 </div>
                 {audio_qc ? (
@@ -137,7 +137,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>3. Pushed to TranscribeMe</strong>
-                    <Chip color={push ? 'success' : 'neutral'} size="sm">{push ? 'Done' : 'Not Yet'}</Chip>
+                    <Badge color={push ? 'success' : 'neutral'}>{push ? 'Done' : 'Not Yet'}</Badge>
                 </div>
                 {push ? (
                     <Descriptions bordered size="small" column={1} items={pushItems} />
@@ -149,7 +149,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>4. Pulled from TranscribeMe</strong>
-                    <Chip color={pull ? 'success' : 'neutral'} size="sm">{pull ? 'Done' : 'Not Yet'}</Chip>
+                    <Badge color={pull ? 'success' : 'neutral'}>{pull ? 'Done' : 'Not Yet'}</Badge>
                 </div>
                 {pull ? (
                     <Descriptions bordered size="small" column={1} items={pullItems} />

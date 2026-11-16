@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
@@ -66,29 +65,29 @@ export default function Issues() {
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 4, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typography-joy mb-4 font-bold color-text-primary"}>
                 Interviews with Multiple Parts
-            </Typography>
+            </h2>
             <div className="mb-4">
-                <Typography level="title-md" sx={{ mb: 2, fontWeight: 'medium' }}>
+                <p className="typeset typeset-title-md mb-2 fontWeight: 'medium'">
                     Help differentiate interviews with:
-                </Typography>
+                </p>
                 <div className="space-y-3">
                     <div className="flex gap-2">
                         <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>1</Typography>
+                            <p className="typeset typeset-body-sm fontWeight: 'bold'">1</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className="typeset typeset-body-md">
                             <strong>Multi-part Interviews</strong> - Interviews that are split into multiple parts. Common with PSYCHS interviews, where interviews could happen over multiple days.
-                        </Typography>
+                        </p>
                     </div>
                     <div className="flex gap-2">
                         <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>2</Typography>
+                            <p className="typeset typeset-body-sm fontWeight: 'bold'">2</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className="typeset typeset-body-md">
                             <strong>Duplicate Interviews</strong> - Interviews that are duplicates of each other. Probably related to Data Flow and renaming files at the source.
-                        </Typography>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -97,20 +96,20 @@ export default function Issues() {
             <div className="flex justify-center items-center h-64">
                 <div className="animate-pulse text-center">
                 <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                <Typography level="body-sm" color="neutral">Loading interview data...</Typography>
+                    <p className="typeset typeset-body-sm text-neutral-600">Loading interview data...</p>
                 </div>
             </div>
             ) : dataGridProps.rows.length === 0 ? (
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                <Typography level="body-md">
+                <p className="typeset typeset-body-md">
                     No interviews with multiple parts found.
-                </Typography>
+                </p>
             </div>
             ) : (
             <>
-                <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                <p className="typeset typeset-body-md mb-2 font-medium text-neutral-600">
                 The following {dataGridProps.rows.length} interviews have multiple parts:
-                </Typography>
+                </p>
                 <AggregationSummary
                     rows={dataGridProps.rows}
                     groupByOptions={GROUP_BY_OPTIONS}

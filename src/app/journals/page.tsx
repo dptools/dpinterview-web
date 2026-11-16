@@ -2,7 +2,6 @@
 import * as React from 'react';
 
 import Link from '@mui/material/Link';
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 
 import { DbAudioJournal } from '@/lib/types/audio_journals';
@@ -72,20 +71,20 @@ export default function Journals() {
                     <div className="flex justify-center items-center h-64">
                         <div className="animate-pulse text-center">
                             <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                            <Typography level="body-sm" color="neutral">Loading journal data...</Typography>
+                            <p className={"typeset typeset-body-sm text-neutral-600"}>Loading journal data...</p>
                         </div>
                     </div>
                 ) : dataGridProps.rows.length === 0 ? (
                     <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                        <Typography level="body-md">
+                        <p className={"typeset typeset-body-md"}>
                             No Audio Journals found.
-                        </Typography>
+                        </p>
                     </div>
                 ) : (
                     <>
-                        <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                        <p className={"typeset typeset-body-md mb-2 font-medium text-neutral-600"}>
                             The following {dataGridProps.rows.length} journals have been identified for processing.
-                        </Typography>
+                        </p>
                         <div className="mt-4">
                             <MuiDataGrid {...dataGridProps} />
                         </div>

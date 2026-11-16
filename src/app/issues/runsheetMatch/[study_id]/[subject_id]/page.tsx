@@ -3,8 +3,7 @@ import * as React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import Typography from '@mui/joy/Typography';
-import Alert from '@mui/joy/Alert';
+import {Alert, AlertDescription} from '@/components/ui/alert';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
 
@@ -176,36 +175,38 @@ export default function RunsheetMatchDetail({
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typeset typeset-h2 mb-1 font-bold color: 'primary.main'"}>
                 Runsheet Match: {subjectId}
-            </Typography>
-            <Typography level="body-md" sx={{ mb: 3, color: 'neutral.600' }}>
+            </h2>
+            <p className={"typeset typeset-body-md mb-3 text-neutral-600"}>
                 <Link href="/issues/runsheetMatch">&larr; Back to subjects</Link> &middot; Study {studyId}
-            </Typography>
+            </p>
 
-            <Alert variant="soft" color="neutral" sx={{ mb: 4 }}>
+            <Alert className={"mb-4"}>
+                <AlertDescription>
                 Select an unmatched file on the right and a missing runsheet entry on the left, then
                 confirm the match. The corrected datetime is picked up by the pipeline on its next
                 run, which imports the file normally and resolves the pipeline failure - nothing on
                 disk is renamed, and no note is required.
+                </AlertDescription>
             </Alert>
 
             {loading ? (
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-pulse text-center">
                         <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                        <Typography level="body-sm" color="neutral">Loading data...</Typography>
+                        <p className={"typeset typeset-body-sm"} color="neutral">Loading data...</p>
                     </div>
                 </div>
             ) : (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div className="border rounded-lg p-4">
-                            <Typography level="title-md" sx={{ mb: 2 }}>
+                            <p className={"typeset typeset-title-md mb-2"}>
                                 Timeline (matched + missing runsheet entries)
-                            </Typography>
+                            </p>
                             {timeline.length === 0 ? (
-                                <Typography level="body-sm" color="neutral">Nothing to show.</Typography>
+                                <p className={"typeset typeset-body-sm"} color="neutral">Nothing to show.</p>
                             ) : (
                                 <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
                                     {timeline.map((entry) => {
@@ -248,11 +249,11 @@ export default function RunsheetMatchDetail({
                         </div>
 
                         <div className="border rounded-lg p-4">
-                            <Typography level="title-md" sx={{ mb: 2 }}>
+                            <p className={"typeset typeset-title-md mb-2"}>
                                 Unmatched files
-                            </Typography>
+                            </p>
                             {unmatchedFiles.length === 0 ? (
-                                <Typography level="body-sm" color="neutral">No unmatched files for this subject.</Typography>
+                                <p className={"typeset typeset-body-sm"} color="neutral">No unmatched files for this subject.</p>
                             ) : (
                                 <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto">
                                     {unmatchedFiles.map((failure) => {
@@ -292,13 +293,13 @@ export default function RunsheetMatchDetail({
 
                     {selectedFailure && (
                         <div className="border rounded-lg p-4 bg-slate-50">
-                            <Typography level="title-md" sx={{ mb: 2 }}>Confirm Match</Typography>
-                            <Typography level="body-sm" sx={{ mb: 1 }} className="font-mono">{selectedFailure.pf_identifier}</Typography>
-                            <Typography level="body-sm" sx={{ mb: 2 }}>
+                            <p className={"typeset typeset-title-md mb-2"}>Confirm Match</p>
+                            <p className={"typeset typeset-body-sm mb-1 font-mono"}>{selectedFailure.pf_identifier}</p>
+                            <p className={"typeset typeset-body-sm mb-2"}>
                                 {selectedMissing
                                     ? `Matched to: ${selectedMissing.interview_type} - ${selectedMissing.event_name} (expected day ${selectedMissing.expected_day})`
                                     : 'Select a missing runsheet entry on the left, or enter a date directly.'}
-                            </Typography>
+                            </p>
                             <div className="flex items-center gap-3">
                                 <label className="text-sm" htmlFor="override-date">Actual event date:</label>
                                 <input

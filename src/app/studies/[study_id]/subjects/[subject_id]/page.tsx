@@ -1,14 +1,6 @@
 'use client'
-import * as React from 'react';
-// import { useEffect, useState } from 'react';
-
-import Typography from '@mui/joy/Typography';
-// import { GridColDef } from '@mui/x-data-grid';
-// import Link from '@mui/material/Link';
-
-// import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
 import SubjectTimelineS from '@/components/domain/SubjectTimelineS';
-
+import {use} from 'react';
 
 interface PageProps {
     params: Promise<{
@@ -18,15 +10,15 @@ interface PageProps {
 }
 
 export default function Page({
-    params: paramsPromise,
-}: PageProps) {
-    const { study_id, subject_id } =  React.use(paramsPromise);
+                                 params: paramsPromise,
+                             }: PageProps) {
+    const {study_id, subject_id} = use(paramsPromise);
 
     return (
         <div className="container mx-auto p-6">
-            <Typography level="h4">
+            <h4 className={"typography typography-h4"}>
                 {subject_id}
-            </Typography>
+            </h4>
 
 
             <div>

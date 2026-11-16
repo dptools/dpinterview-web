@@ -8,7 +8,7 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
 import TimelineDot from '@mui/lab/TimelineDot';
-import Typography from '@mui/joy/Typography';
+
 
 import { TimelineEvent } from '@/lib/types/timeline';
 
@@ -26,9 +26,9 @@ export type MuiTimelineProps = {
 export default function MuiTimeline(props: MuiTimelineProps) {
     if (!props.events || props.events.length === 0) {
         return (
-            <Typography level="body-lg" component="span">
+            <span className={"typography typography-body-lg"}>
                 No events to display
-            </Typography>
+            </span>
         );
     }
 
@@ -48,14 +48,14 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                     color="text.secondary"
                 >
                     {event.altText && (
-                        <Typography level="body-md" component="span">
+                        <span className={"typography typography-body-md"}>
                             <strong>{event.altText}</strong>
-                        </Typography>
+                        </span>
                     )}
                     {event.altDescription && (
-                        <Typography>
+                        <p className={"typography"}>
                             {event.altDescription}
-                        </Typography>
+                        </p>
                     )}
                 </TimelineOppositeContent>
             )}
@@ -76,14 +76,14 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                 {index !== props.events.length - 1 && <TimelineConnector />}
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
-                <Typography level="body-md" component="span">
+                <span className={"typography typography-body-md"}>
                     <strong>{event.title}</strong>
-                </Typography>
-                <Typography>
+                </span>
+                <p className={"typography"}>
                     {EMPHASISED_TEXTS.includes(event.description)
                         ? <em>{event.description}</em>
                         : event.description}
-                </Typography>
+                </p>
             </TimelineContent>
         </TimelineItem>
     ));

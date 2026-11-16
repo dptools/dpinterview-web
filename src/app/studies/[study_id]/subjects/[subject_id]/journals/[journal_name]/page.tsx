@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { Descriptions } from 'antd';
 import type { DescriptionsProps } from 'antd';
 
-import Typography from '@mui/joy/Typography';
 import Box from '@mui/material/Box';
 
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab from '@mui/joy/Tab';
-import TabPanel from '@mui/joy/TabPanel';
+import {
+    Tabs,
+    TabsTrigger,
+    TabsList,
+    TabsContent,
+} from "@/components/ui/tabs";
 
 import { DbAudioJournal } from '@/lib/types/audio_journals';
 import Transcript from '@/components/domain/TranscriptE';
@@ -127,18 +128,17 @@ export default function Page({
                     </div>
                 )}
 
-                <Typography level="title-lg" sx={{ mt: 3 }}>
+                <p className={"typeset typeset-title-lg mt-3"}>
                     <strong>Further Information</strong>
-                </Typography>
+                </p>
 
                 <Box>
-                    <Tabs aria-label="Basic tabs" defaultValue={0} sx={{ mt: 3 }}>
-                        <TabList>
-                            <Tab>📄 Transcript</Tab>
-                            <Tab>🔊 Transcription Pipeline</Tab>
-                        </TabList>
-                        <TabPanel value={0}>
-
+                    <Tabs aria-label="Basic tabs" defaultValue={"transcript"} className={"mt-3"}>
+                        <TabsList>
+                            <TabsTrigger value={"transcript"}>📄 Transcript</TabsTrigger>
+                            <TabsTrigger value={"pipeline"}>🔊 Transcription Pipeline</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value={"transcript"}>
                             <Transcript
                                 identifier={journal_name}
                                 identifier_type='audio_journal'
@@ -147,11 +147,11 @@ export default function Page({
                                 currentAudioTime={currenntAudioTime}
                                 updateAudioTime={updateAudioTime}
                             />
-                        </TabPanel>
-                        <TabPanel value={1}>
-                            <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3, mb: 2 }}>
+                        </TabsContent>
+                        <TabsContent value={"pipeline"}>
+                            <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3 mb-2"}>
                                 <strong>Transcription Pipeline</strong>
-                            </Typography>
+                            </p>
 
                             <TranscriptionPipelineStatus
                                 identifier={journal_name}
@@ -159,7 +159,7 @@ export default function Page({
                                 study_id={study_id}
                                 subject_id={subject_id}
                             />
-                        </TabPanel>
+                        </TabsContent>
                     </Tabs>
                 </Box>
             </div>

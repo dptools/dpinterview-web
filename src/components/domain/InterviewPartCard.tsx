@@ -1,4 +1,3 @@
-import Typography from '@mui/joy/Typography';
 
 import List from '@mui/icons-material/List';
 
@@ -73,7 +72,7 @@ export default function updateInterviewPartCard(props: updateInterviewPartCardPr
         <div className="border border-gray-800 rounded p-4">
             <div className="flex items-center mb-3">
                 <List className="mr-2 text-gray-600" />
-                <Typography className="font-medium">{interview_part_name}</Typography>
+                <p className="font-medium">{interview_part_name}</p>
             </div>
             <div className="space-y-3">
                 <div className="flex justify-between items-center">
