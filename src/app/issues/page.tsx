@@ -2,6 +2,11 @@ import * as React from 'react';
 import Typography from '@mui/joy/Typography';
 import Link from '@mui/material/Link';
 
+// @next-codemod-ignore Cache Components adoption: this segment temporarily allows blocking.
+// Remove this opt-out after verifying the segment passes validation without it.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export default function Home() {
     return (
         <div className="container mx-auto p-6 max-w-4xl">
