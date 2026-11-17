@@ -1,3 +1,4 @@
+import Providers from "@/app/providers";
 import {theme} from "@/app/theme";
 import AppHeader from "@/components/app-header";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
         <html lang="en" className={`${geist.variable} ${geistMono.variable} antialiased`}>
         <body>
         <AppRouterCacheProvider options={{enableCssLayer: true}}>
+            <Providers>
             <ThemeProvider theme={theme}>
                 <SidebarProvider>
                     <AppSidebar aria-label={"sidebar"}/>
@@ -50,6 +52,7 @@ export default function RootLayout({
                     </SidebarInset>
                 </SidebarProvider>
             </ThemeProvider>
+            </Providers>
         </AppRouterCacheProvider>
         </body>
         </html>
