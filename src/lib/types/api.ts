@@ -10,6 +10,7 @@ export const Metadata = z.object({
     totalRows: z.int().gte(0),
     limit: z.int().positive(),
     offset: z.int().gte(0),
+    query: z.string(),
 });
 
 export type Metadata = z.infer<typeof Metadata>;

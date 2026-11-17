@@ -1,4 +1,5 @@
 import { DbFile } from '@/lib/types/file';
+import {z} from "zod";
 
 export type DbInterview = {
     interview_name: string;
@@ -6,6 +7,13 @@ export type DbInterview = {
     subject_id: string;
     study_id: string;
 };
+
+export const DbInterview = z.toZod<DbInterview>()(z.object({
+    interview_name: z.string(),
+    interview_type: z.string(),
+    subject_id: z.string(),
+    study_id: z.string(),
+}));
 
 export type DbInterviewEnhanced = {
     interview_name: string;

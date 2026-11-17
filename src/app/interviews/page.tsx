@@ -1,16 +1,25 @@
 'use client'
-import * as React from 'react';
+import MuiDataGrid from '@/components/mui/MuiDataGrid';
+import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
+import InterviewApi from "@/lib/api/v1/interviews";
+import {DbInterview} from "@/lib/types/interview";
+import {Dashboard} from '@mui/icons-material';
 
 import Link from '@mui/material/Link';
-import {Alert, AlertDescription} from '@/components/ui/alert';
-import { GridColDef } from '@mui/x-data-grid';
-import { Dashboard } from '@mui/icons-material';
+import {GridColDef} from '@mui/x-data-grid';
+import {useQuery} from "@tanstack/react-query";
+import {AlertCircle} from "lucide-react";
+import * as React from 'react';
 
-import { DbInterview } from '@/lib/types/interview';
-import MuiDataGrid, { MuiDataGridProps } from '@/components/mui/MuiDataGrid';
+function getRowId(row: DbInterview) {
+    return row.interview_name;
+}
 
 export default function Interviews() {
-    const [dataGridProps, setDataGridProps] = React.useState<MuiDataGridProps | null>(null);
+    const {isSuccess, data: interviews, isError, error, isLoading} = useQuery(InterviewApi.list({limit: 20_000}));
+    const height = 670;
+    const pageSizeOptions = [10, 20];
+    const selectable = true;
 
     const columns: GridColDef[] = React.useMemo(() => [
         {
@@ -21,57 +30,46 @@ export default function Interviews() {
                 <Link href={`/interviews/${params.value}`}>{params.value}</Link>
             )
         },
-        { field: 'interview_type', headerName: 'Interview Type', width: 150 },
-        { field: 'subject_id', headerName: 'Subject ID', width: 150 },
-        { field: 'study_id', headerName: 'Study ID', width: 150 },
+        {field: 'interview_type', headerName: 'Interview Type', width: 150},
+        {field: 'subject_id', headerName: 'Subject ID', width: 150},
+        {field: 'study_id', headerName: 'Study ID', width: 150},
     ], []);
 
-    React.useEffect(() => {
-        // Fetch data from the API
-        fetch('/api/v1/interviews/list?limit=20000')
-            .then((res) => res.json())
-            .then((data) => {
-
-                // parse to grid rows
-                const gridRows = data.rows.map((interview: DbInterview) => ({
-                    id: interview.interview_name,
-                    interview_name: interview.interview_name,
-                    interview_type: interview.interview_type,
-                    subject_id: interview.subject_id,
-                    study_id: interview.study_id,
-                }));
-
-                const props: MuiDataGridProps = {
-                    columns,
-                    rows: gridRows,
-                    height: 670,
-                    pageSizeOptions: [10, 20],
-                    selectable: true
-                };
-                setDataGridProps(props);
-            });
-    }, [columns]);
-
-    return (
+    if (isError) return (
+        <Alert>
+            <AlertCircle/>
+            <AlertTitle>Error fetching data</AlertTitle>
+            <AlertDescription>
+                {error ? (
+                    <div>
+                        <p>The following error occurred</p>
+                        <p>{error.message}</p>
+                    </div>
+                ) : (
+                    <p>An error occurred</p>
+                )}
+            </AlertDescription>
+        </Alert>);
+    if (isLoading) return (
+        <div className="flex justify-center items-center h-64">
+            <div className="animate-pulse text-center">
+                <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
+                <p className={"typeset typeset-body-sm text-neutral"}>Loading interview data...</p>
+            </div>
+        </div>
+    );
+    if (isSuccess) return (
         <>
             <div className="container mx-auto p-4">
                 <div className={"p-[2rem] m-auto mw-[800px]"}>
-                    <Alert  className={"mb-2 p-3 text-center rounded-md text-neutral-600"}>
-                        <Dashboard />
+                    <Alert className={"mb-2 p-3 text-center rounded-md text-neutral-600"}>
+                        <Dashboard/>
                         <AlertDescription className={"typeset typeset-body-md"}>
                             Please use Superset Dashboard to look at the Aggregated Interview data.
                         </AlertDescription>
                     </Alert>
                 </div>
-
-                {!dataGridProps ? (
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-pulse text-center">
-                            <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                            <p className={"typeset typeset-body-sm text-neutral"}>Loading interview data...</p>
-                        </div>
-                    </div>
-                ) : dataGridProps.rows.length === 0 ? (
+                {interviews.rows.length === 0 ? (
                     <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
                         <p className={"typeset typeset-body-md"}>
                             No interviews found.
@@ -80,10 +78,15 @@ export default function Interviews() {
                 ) : (
                     <>
                         <p className={"typeset typeset-body-md mb-2 font-medium text-neutral-600"}>
-                            The following {dataGridProps.rows.length} interviews have been identified for processing.
+                            The following {interviews.rows.length} interviews have been identified for processing.
                         </p>
                         <div className="mt-4">
-                            <MuiDataGrid {...dataGridProps} />
+                            <MuiDataGrid height={height}
+                                         selectable={selectable}
+                                         pageSizeOptions={pageSizeOptions}
+                                         rows={interviews.rows}
+                                         columns={columns}
+                                         getRowId={getRowId}/>
                         </div>
                     </>
                 )}
