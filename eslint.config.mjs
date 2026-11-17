@@ -1,7 +1,9 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
+import pluginQuery from '@tanstack/eslint-plugin-query'
 
 const eslintConfig = [
+    ...pluginQuery.configs['flat/recommended-strict'],
     ...nextCoreWebVitals,
     ...nextTypescript, {
     rules: {
