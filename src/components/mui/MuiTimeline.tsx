@@ -23,8 +23,8 @@ export type MuiTimelineProps = {
     events: TimelineEvent[];
 };
 
-export default function MuiTimeline(props: MuiTimelineProps) {
-    if (!props.events || props.events.length === 0) {
+export default function MuiTimeline({events}: MuiTimelineProps) {
+    if (!events || events.length === 0) {
         return (
             <span className={"typography typography-body-lg"}>
                 No events to display
@@ -32,14 +32,9 @@ export default function MuiTimeline(props: MuiTimelineProps) {
         );
     }
 
-    for (const event of props.events) {
-        if (!event.iconColor) {
-            event.iconColor = 'grey';
-        }
-    }
-
-
-    const timelineEvents = props.events.map((event, index) => (
+    return (
+        <Timeline>
+            {events.map((event, index) => (
         <TimelineItem key={index}>
             {(event.altText || event.altDescription) && (
                 <TimelineOppositeContent
@@ -61,7 +56,7 @@ export default function MuiTimeline(props: MuiTimelineProps) {
             )}
             <TimelineSeparator>
                 {index !== 0 && <TimelineConnector />}
-                <TimelineDot color={event.iconColor}>
+                <TimelineDot color={event.iconColor ? event.iconColor : 'grey'}>
                     {event.href ? (
                         <Link
                             href={event.href}
@@ -73,7 +68,7 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                         event.icon
                     )}
                 </TimelineDot>
-                {index !== props.events.length - 1 && <TimelineConnector />}
+                {index !== events.length - 1 && <TimelineConnector />}
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
                 <span className={"typography typography-body-md"}>
@@ -86,11 +81,6 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                 </p>
             </TimelineContent>
         </TimelineItem>
-    ));
-
-    return (
-        <Timeline>
-            {timelineEvents}
-        </Timeline>
-    );
+    ))}
+        </Timeline>);
 }
