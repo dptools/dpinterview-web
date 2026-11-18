@@ -1,14 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+import {Label} from "@/components/ui/label"
 
-import { Skeleton } from '@mui/material';
-import { ExpandLess } from '@mui/icons-material';
+import {Skeleton} from '@/components/ui/skeleton';
+import {Switch} from "@/components/ui/switch"
+import {cyrb53} from "@/lib/utils";
+import {ExpandLess} from '@mui/icons-material';
 
-import { Empty } from 'antd';
+import {Empty} from 'antd';
+import * as React from "react";
+import {ComponentPropsWithoutRef, ReactElement, useEffect, useId, useMemo, useRef, useState} from "react";
 
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-
-import { toast } from "sonner";
+import {toast} from "sonner";
 
 export type InterviewTranscriptProps = {
     identifier: string;
@@ -29,8 +30,46 @@ type ParsedLine = {
     tags?: string[];
 }
 
+export function TranscriptSkeletonEntry(props: ComponentPropsWithoutRef<typeof Skeleton>) {
+    const id = useId();
+    const width = useMemo(() => `${70 + (cyrb53(id) % 30)}%`, [id]);
+
+    return (
+        <Skeleton {...props}
+                  className="h-4 max-w-(--skeleton-width) flex-1"
+                  data-transcription="transcription-skeleton-text"
+                  style={
+                      {
+                          "--skeleton-width": width,
+                      } as React.CSSProperties
+                  }
+
+        />
+    )
+
+}
+
+export function TranscriptSkeleton(): ReactElement {
+
+    const [elements,] = useState(() => (2 + (Math.random() * 4)));
+
+    return (
+        <div className="p-4">
+            {Array(5).fill(0).map((_, i) => (
+                <div key={i} className="mb-6">
+                    <Skeleton className="mb-2 w-1/3 h-28"/>
+                    {Array(elements).fill(0).map((_, j) => (
+                        <TranscriptSkeletonEntry key={j}/>
+                    ))}
+                </div>
+            ))}
+        </div>
+    )
+
+}
+
 export default function Transcript(props: InterviewTranscriptProps) {
-    const { identifier, identifier_type, study_id, subject_id, updateAudioTime } = props;
+    const {identifier, identifier_type, study_id, subject_id, updateAudioTime} = props;
     const [transcriptData, setTranscriptData] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [missing, setMissing] = useState(false);
@@ -95,15 +134,13 @@ export default function Transcript(props: InterviewTranscriptProps) {
         }
         if (identifier_type === 'interview') {
             fetchInterviewData(identifier);
-        }
-        else if (identifier_type === 'audio_journal') {
+        } else if (identifier_type === 'audio_journal') {
             if (!study_id || !subject_id) {
                 toast.message('Uh oh! Missing study_id or subject_id.')
                 return;
             }
             fetchAudioJournalData(study_id, subject_id, identifier);
-        }
-        else {
+        } else {
             toast.message('Uh oh! Invalid identifier_type.')
             return;
         }
@@ -167,59 +204,59 @@ export default function Transcript(props: InterviewTranscriptProps) {
 
             // parse into time, speaker, text
             const parsedLines: ParsedLine[] = nonEmptyLines.map((line) => {
-                const match = line.match(/^(S\d+):?\s*([\d:.]+)\s+(.*)/);
-                if (match) {
-                    const speaker = match[1];
-                    const time_str = match[2];
-                    const text = match[3];
+                    const match = line.match(/^(S\d+):?\s*([\d:.]+)\s+(.*)/);
+                    if (match) {
+                        const speaker = match[1];
+                        const time_str = match[2];
+                        const text = match[3];
 
-                    // Convert time string to seconds
-                    const timeParts = time_str.split(':');
-                    let time = 0;
-                    if (timeParts.length === 3) {
-                        time += parseInt(timeParts[0], 10) * 3600; // hours
-                        time += parseInt(timeParts[1], 10) * 60; // minutes
-                        time += parseFloat(timeParts[2]); // seconds
-                    } else if (timeParts.length === 2) {
-                        time += parseInt(timeParts[0], 10) * 60; // minutes
-                        time += parseFloat(timeParts[1]); // seconds
-                    } else if (timeParts.length === 1) {
-                        time += parseFloat(timeParts[0]); // seconds
+                        // Convert time string to seconds
+                        const timeParts = time_str.split(':');
+                        let time = 0;
+                        if (timeParts.length === 3) {
+                            time += parseInt(timeParts[0], 10) * 3600; // hours
+                            time += parseInt(timeParts[1], 10) * 60; // minutes
+                            time += parseFloat(timeParts[2]); // seconds
+                        } else if (timeParts.length === 2) {
+                            time += parseInt(timeParts[0], 10) * 60; // minutes
+                            time += parseFloat(timeParts[1]); // seconds
+                        } else if (timeParts.length === 1) {
+                            time += parseFloat(timeParts[0]); // seconds
+                        }
+
+                        const tagsSet: Set<string> = new Set();
+                        // Check in string for text within '[]' for tags
+                        const tags = text.match(/\[(.*?)\]/g);
+                        if (tags) {
+                            tags.forEach((tag) => {
+                                const cleanTag = tag.replace(/\[|\]/g, '').trim(); // Remove brackets
+
+                                const knownTags = ['inaudible', 'laughter', 'crosstalk'];
+
+                                if (!knownTags.includes(cleanTag)) {
+                                    tagsSet.add("uncertain");
+                                } else {
+                                    tagsSet.add(cleanTag);
+                                }
+                            });
+                        }
+                        // Check if text in '{}' for redacted text
+                        const redactedText = text.match(/\{(.*?)\}/g);
+                        if (redactedText) {
+                            tagsSet.add('redacted');
+                        }
+                        const tagsList = Array.from(tagsSet);
+
+                        return {speaker, time_str, start_time_s: time, text, tags: tagsList, end_time_s: null};
                     }
-
-                    const tagsSet: Set<string> = new Set();
-                    // Check in string for text within '[]' for tags
-                    const tags = text.match(/\[(.*?)\]/g);
-                    if (tags) {
-                        tags.forEach((tag) => {
-                            const cleanTag = tag.replace(/\[|\]/g, '').trim(); // Remove brackets
-
-                            const knownTags = ['inaudible', 'laughter', 'crosstalk'];
-
-                            if (!knownTags.includes(cleanTag)) {
-                                tagsSet.add("uncertain");
-                            } else {
-                                tagsSet.add(cleanTag);
-                            }
-                        });
+                    return {
+                        speaker: null,
+                        time_str: null,
+                        start_time_s: null,
+                        text: line,
+                        end_time_s: null,
                     }
-                    // Check if text in '{}' for redacted text
-                    const redactedText = text.match(/\{(.*?)\}/g);
-                    if (redactedText) {
-                        tagsSet.add('redacted');
-                    }
-                    const tagsList = Array.from(tagsSet);
-
-                    return { speaker, time_str, start_time_s: time, text, tags: tagsList, end_time_s: null };
                 }
-                return {
-                    speaker: null,
-                    time_str: null,
-                    start_time_s: null,
-                    text: line,
-                    end_time_s: null,
-                }
-            }
             );
 
             // Set end_time_s as start_time_s of next line
@@ -259,7 +296,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
         <div>
             {missing ? (
                 <div className='m-32'>
-                    <Empty description="No Transcript File Found" />
+                    <Empty description="No Transcript File Found"/>
                 </div>
             ) : null}
 
@@ -276,7 +313,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
                     <div
                         ref={scrollRef}
                         className={`bg-gray-50 rounded-md shadow p-3 text-gray-800 space-y-2 ${enableAutoScroll ? 'overflow-y-auto' : ''}`}
-                        style={enableAutoScroll ? { maxHeight: '400px' } : undefined}
+                        style={enableAutoScroll ? {maxHeight: '400px'} : undefined}
                     >
                         {parsedData.map((line, idx) => (
                             <div
@@ -287,15 +324,16 @@ export default function Transcript(props: InterviewTranscriptProps) {
                                     }
                                 }}
                                 className={`relative flex items-start space-x-2 p-2 rounded cursor-pointer transition-all ${line.highlight ? 'active-line bg-yellow-100 border-l-4 border-yellow-400 shadow-sm' : 'hover:bg-gray-100'}`}
-                                style={{ fontFamily: 'monospace' }}
+                                style={{fontFamily: 'monospace'}}
                             >
                                 {line.highlight && (
                                     <div
                                         className="absolute top-0 left-0 h-full bg-yellow-200 opacity-50"
-                                        style={{ width: `${activeLinePercentComplete}%`, zIndex: 0 }}
+                                        style={{width: `${activeLinePercentComplete}%`, zIndex: 0}}
                                     />
                                 )}
-                                <div style={{ position: 'relative', zIndex: 1 }} className="flex items-start space-x-2 w-full">
+                                <div style={{position: 'relative', zIndex: 1}}
+                                     className="flex items-start space-x-2 w-full">
                                     {line.speaker && (
                                         <span className="font-semibold text-gray-900">
                                             {line.speaker}:
@@ -316,7 +354,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
                                                         className={`text-xs font-medium px-2 py-1 rounded ${tag === 'redacted'
                                                             ? 'bg-red-100 text-red-800'
                                                             : 'bg-blue-100 text-blue-800'
-                                                            }`}
+                                                        }`}
                                                     >
                                                         #{tag}
                                                     </span>
@@ -332,32 +370,16 @@ export default function Transcript(props: InterviewTranscriptProps) {
                     {transcriptData && (
                         // Scroll to top button
                         <button
-                            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                            onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
                             className="fixed bottom-6 right-6 bg-slate-600 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg transition-all"
                             aria-label="Scroll to top"
                         >
-                            <ExpandLess />
+                            <ExpandLess/>
                         </button>
                     )}
                 </div>
             ) : (
-                <div className="p-4">
-                    {Array(5).fill(0).map((_, i) => (
-                        <div key={i} className="mb-6">
-                            <Skeleton variant="text" width="30%" height={28} className="mb-2" />
-
-                            {Array(2 + Math.floor(Math.random() * 4)).fill(0).map((_, j) => (
-                                <Skeleton
-                                    key={j}
-                                    variant="text"
-                                    width={`${70 + Math.random() * 30}%`}
-                                    height={24}
-                                    className="my-1"
-                                />
-                            ))}
-                        </div>
-                    ))}
-                </div>
+                <TranscriptSkeleton/>
             )}
 
         </div>
