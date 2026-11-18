@@ -8,6 +8,7 @@ import {Skeleton} from "@/components/ui/skeleton"
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,} from "@/components/ui/tooltip"
 
 import {useIsMobile} from "@/hooks/use-mobile"
+import {cyrb53} from "@/lib/utils";
 import {cva, type VariantProps} from "class-variance-authority"
 import {cn} from "cn"
 import {PanelLeftIcon} from "lucide-react"
@@ -597,26 +598,6 @@ function SidebarMenuSkeleton({
     showIcon?: boolean
 }) {
     const id = useId();
-
-    /**
-     * cyrb53 hash. See https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js
-     * Deterministic so only changes when id does.
-     * @param str
-     * @param seed
-     */
-      function cyrb53(str : string, seed : number = 0) : number {
-        let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-        for(let i = 0, ch; i < str.length; i++) {
-          ch = str.charCodeAt(i);
-          h1 = Math.imul(h1 ^ ch, 2654435761);
-          h2 = Math.imul(h2 ^ ch, 1597334677);
-        }
-        h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-        h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-        h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-        h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-        return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-      }
 
     // Hash 'id' of component and take mod.
     const width = useMemo(() => `${50 + (cyrb53(id) % 41)}%`, [id]);
