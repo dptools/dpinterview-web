@@ -10,22 +10,22 @@ interface PageFixtures {
 type UseFunction<T extends PageModel> = (x: T) => void;
 
 export const test = baseTest.extend<PageFixtures>({
-    interviews: async ({page}, use: UseFunction<InterviewsPageModel>) => {
+    interviews: async ({page}, using: UseFunction<InterviewsPageModel>) => {
         const interview = new InterviewsPageModel(page);
         await interview.goto();
-        use(interview);
+        using(interview);
         // clean up
     },
-    journals: async ({page}, use: UseFunction<JournalsPage>) => {
+    journals: async ({page}, using: UseFunction<JournalsPage>) => {
         const journalsPage = new JournalsPage(page);
         await journalsPage.goto();
-        use(journalsPage);
+        using(journalsPage);
         // clean up
     },
-    home: async ({page}, use: UseFunction<HomePageModel>) => {
+    home: async ({page}, using: UseFunction<HomePageModel>) => {
         const homePage = new HomePageModel(page);
         await homePage.goto();
-        use(homePage);
+        using(homePage);
         // clean up
     },
 })

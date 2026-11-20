@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { toast } from "sonner";
 
-import Chip from '@mui/joy/Chip';
+import {Badge} from "@/components/ui/badge";
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -157,23 +157,22 @@ export default function InterviewRunsheet(props: InterviewRunsheetProps) {
                     </h3>
                     <div className="flex items-center gap-2 ml-2 text-gray-600">
                         <span className="font-medium">{formData.interview_name}</span>
-                        <Chip
+                        <Badge
                             color="neutral"
-                            variant="outlined"
-                            size='lg'
+                            variant="outline"
                         >
                             {formData.event_name}
-                        </Chip>
+                        </Badge>
                         {/* <span className="text-gray-400">•</span>
                         <span className="italic">{formData.event_name}</span> */}
                     </div>
                     {usingClosestRunsheet && (
-                        <Chip
+                        <Badge
                             color="warning"
-                            variant="solid"
+                            variant="default"
                         >
                             Not Exact Match
-                        </Chip>
+                        </Badge>
                     )}
                 </div>
             ) : (

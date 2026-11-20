@@ -1,5 +1,19 @@
-import { getConnection } from "@/lib/db";
-import { unformatSQL } from "@/lib/query";
+import {connection} from "@/lib/db";
+import {unformatSQL} from "@/lib/query";
+import {InterviewsResponse, stringToInt} from "@/lib/types/api";
+import {DbInterview} from "@/lib/types/interview";
+import {NextRequest, NextResponse} from "next/server";
+import sql, {empty, join} from "sql-template-tag";
+import {z} from "zod";
+
+// Schema to automatically decode and validate search parameters
+const paramsSchema = z.compile(z.object({
+    study_id: z.string().optional(),
+    subject_id: z.string().optional(),
+    type: z.string().optional(),
+    limit: stringToInt.optional().default(5),
+    offset: stringToInt.optional().default(0),
+}));
 
 /**
  * Handles the GET request to fetch interviews from the database.
@@ -8,50 +22,45 @@ import { unformatSQL } from "@/lib/query";
  * @returns {Promise<Response>} - A promise that resolves to a Response object containing the fetched interviews in JSON format.
  *
  */
-export async function GET(request: Request): Promise<Response> {
-    const connection = getConnection();
-    const url = new URL(request.url);
-    const studyId = url.searchParams.get('study_id');
-    const subjectId = url.searchParams.get('subject_id');
-    const type = url.searchParams.get('type');
-    const limit = url.searchParams.get('limit') || 5;
-    const offset = url.searchParams.get('offset') || 0;
+export async function GET(request: NextRequest): Promise<NextResponse> {
 
-    let baseQuery = "SELECT * FROM interviews";
-    const params: any[] = [];
-    let paramIndex = 1;
+    const params = Object.fromEntries(request.nextUrl.searchParams);
+    const {offset, type, limit, study_id: studyId, subject_id: subjectId} = await paramsSchema.decodeAsync(params);
+
+    const filters = [];
 
     if (studyId) {
-        baseQuery += ` WHERE study_id = $${paramIndex++}`;
-        params.push(studyId);
+        filters.push(sql`study_id = ${studyId}`);
     }
-
     if (subjectId) {
-        baseQuery += ` ${params.length ? 'AND' : 'WHERE'} subject_id = $${paramIndex++}`;
-        params.push(subjectId);
+        filters.push(sql`subject_id = ${subjectId}`);
     }
-
     if (type) {
-        baseQuery += ` ${params.length ? 'AND' : 'WHERE'} interview_type = $${paramIndex++}`;
-        params.push(type);
+        filters.push(sql`interview_type = ${type}`);
     }
 
-    const countQuery = `SELECT COUNT(*) FROM (${baseQuery}) AS total_count`;
-    const countResult = await connection.query(countQuery);
-    const totalRows = countResult.rows[0].count;
+    const filter = sql`${filters.length > 0 ? sql`WHERE ${join(filters, " AND ")}` : empty}`
+    const baseQuery = sql`SELECT *
+                          FROM interviews
+                              ${filter}
+                          ORDER BY subject_id
+                          LIMIT ${limit} OFFSET ${offset}`;
 
-    const limitedQuery = `${baseQuery} LIMIT ${limit} OFFSET ${offset}`;
-    const { rows } = await connection.query(limitedQuery);
+    // manually specifies that count is an integer so we get a number back. JS can handle integers beyond 10^12 so this should be safe
+    const countQuery = sql`SELECT COUNT(*)::integer AS total_count FROM interviews ${filter}`;
 
-    const metadata = {
-        query: unformatSQL(limitedQuery),
-        totalRows,
-        limit,
-        offset,
-    };
-    return new Response(JSON.stringify({ metadata, rows }), {
-        headers: {
-            'Content-Type': 'application/json',
-        },
+    const countResult = await connection.query<{ total_count: number }>(countQuery);
+    const totalRows = countResult.rows[0].total_count;
+
+    const {rows} = await connection.query<DbInterview>(baseQuery);
+
+    const result = await InterviewsResponse.encodeAsync({
+        metadata: {
+            query: unformatSQL(baseQuery.sql),
+            totalRows,
+            limit,
+            offset,
+        }, rows
     });
+    return NextResponse.json(result);
 }

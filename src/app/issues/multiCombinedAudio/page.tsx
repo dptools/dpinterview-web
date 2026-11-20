@@ -2,7 +2,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
@@ -66,29 +65,29 @@ export default function Issues() {
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 4, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typeset typeset-h2 mb-4 font-bold text-(--mui-palette-primary-main)"}>
                 Interviews with Multiple Combined Audio Files
-            </Typography>
+            </h2>
             <div className="mb-4">
-                <Typography level="title-md" sx={{ mb: 2, fontWeight: 'medium' }}>
+                <p className="typeset typeset-title-md mb-2 font-medium">
                     Help identify the audio files that should be transcribed (and what should be ignored)
-                </Typography>
+                </p>
                 <div className="space-y-3">
                     <div className="flex gap-2">
-                        <div className="flex-shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>1</Typography>
+                        <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
+                            <p className="typeset typeset-body-sm font-bold">1</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className="typeset typeset-body-md">
                             <strong>Multi-part Interviews</strong> - These interviews have 2 combined audio files, both of which seem to be valid
-                        </Typography>
+                        </p>
                     </div>
                     <div className="flex gap-2">
-                        <div className="flex-shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
-                            <Typography level="body-sm" sx={{ fontWeight: 'bold' }}>2</Typography>
+                        <div className="shrink-0 bg-primary-100 rounded-full w-6 h-6 flex items-center justify-center">
+                            <p className="typeset typeset-body-sm font-bold">2</p>
                         </div>
-                        <Typography level="body-md">
+                        <p className="typeset typeset-body-md">
                             <strong>Single-part Interviews</strong> - These interviews have only 1 valid combined audio file, with other audio files mislabeled or irrelevant.
-                        </Typography>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -97,20 +96,20 @@ export default function Issues() {
             <div className="flex justify-center items-center h-64">
                 <div className="animate-pulse text-center">
                 <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                <Typography level="body-sm" color="neutral">Loading interview data...</Typography>
+                <p className="typeset typeset-body-sm color-neutral">Loading interview data...</p>
                 </div>
             </div>
             ) : dataGridProps.rows.length === 0 ? (
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                <Typography level="body-md">
+                <p className="typeset typeset-body-md">
                     No interviews with multiple combined audio files found.
-                </Typography>
+                </p>
             </div>
             ) : (
             <>
-                <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                <p className="typeset typeset-body-md mb-2 font-medium text-neutral-600">
                 The following {dataGridProps.rows.length} interviews have multiple combined audio files:
-                </Typography>
+                </p>
                 <AggregationSummary
                     rows={dataGridProps.rows}
                     groupByOptions={GROUP_BY_OPTIONS}

@@ -1,0 +1,42 @@
+import {InterviewPartUpdate} from "@/app/api/v1/interview-parts/route";
+import {ApiError} from "next/dist/server/api-utils";
+import {z} from "zod";
+
+export const ApiKeys = {
+    all: ["api"] as const,
+}
+
+/**
+ * Generic GET function that parses resultant JSON as supplied Zod schema
+ * @param schema
+ * @param url
+ * @throws ApiError
+ */
+export async function fetcher<T extends z.ZodType>(schema: T, url: URL | string): Promise<z.output<T>> {
+    const result = await fetch(url);
+    if (!result.ok) {
+        throw new ApiError(result.status, "Error fetching data");
+    }
+    const jsonData = await result.json();
+    const parseResult = await schema.safeDecodeAsync(jsonData);
+    if (!parseResult.success) {
+        throw new ApiError(500, parseResult.error.message);
+    }
+    return parseResult.data;
+}
+
+export const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+});
+
+export async function postJson(input: string | URL | Request, body: object, init? : Omit<RequestInit,"body">){
+    return fetch(input, {
+        ...init,
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+}

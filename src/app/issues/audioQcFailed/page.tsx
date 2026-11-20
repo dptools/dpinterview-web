@@ -3,7 +3,6 @@ import * as React from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import Typography from '@mui/joy/Typography';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 import Button from '@mui/material/Button';
@@ -151,17 +150,17 @@ export default function AudioQcFailedIssues() {
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 4, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typography typography-h2"}>
                 Failed Audio QC
-            </Typography>
+            </h2>
 
-            <Typography level="body-md" sx={{ mb: 3, maxWidth: '800px' }}>
+            <p className={"typography typography-body-md mb-3 max-w-[800px]"}>
                 Before being sent to TranscribeMe, combined audio is checked for basic
                 quality issues (silence, clipping, DC offset, voice activity). These
                 interviews / audio journals failed that check and are not being
                 transcribed until someone looks at why - or manually overrides the
                 result below.
-            </Typography>
+            </p>
 
             <FormControlLabel
                 control={<Switch checked={includeOverridden} onChange={(e) => setIncludeOverridden(e.target.checked)} />}
@@ -173,20 +172,20 @@ export default function AudioQcFailedIssues() {
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-pulse text-center">
                         <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                        <Typography level="body-sm" color="neutral">Loading data...</Typography>
+                        <p className={"typography typography-body-sm text-neutral-600"}>Loading data...</p>
                     </div>
                 </div>
             ) : dataGridProps.rows.length === 0 ? (
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                    <Typography level="body-md">
+                    <p className={"typography typography-body-md"}>
                         No audio QC failures found.
-                    </Typography>
+                    </p>
                 </div>
             ) : (
                 <>
-                    <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                    <p className={"typography typography-body-md mb-2 fontWeight: 'medium', color: 'neutral.600'"}>
                         The following {dataGridProps.rows.length} recordings failed audio QC:
-                    </Typography>
+                    </p>
                     <AggregationSummary rows={dataGridProps.rows} groupByOptions={GROUP_BY_OPTIONS} />
                     <div className="mt-4">
                         <MuiDataGrid {...dataGridProps} />

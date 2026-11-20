@@ -8,7 +8,7 @@ import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
 import TimelineDot from '@mui/lab/TimelineDot';
-import Typography from '@mui/joy/Typography';
+
 
 import { TimelineEvent } from '@/lib/types/timeline';
 
@@ -23,23 +23,18 @@ export type MuiTimelineProps = {
     events: TimelineEvent[];
 };
 
-export default function MuiTimeline(props: MuiTimelineProps) {
-    if (!props.events || props.events.length === 0) {
+export default function MuiTimeline({events}: MuiTimelineProps) {
+    if (!events || events.length === 0) {
         return (
-            <Typography level="body-lg" component="span">
+            <span className={"typography typography-body-lg"}>
                 No events to display
-            </Typography>
+            </span>
         );
     }
 
-    for (const event of props.events) {
-        if (!event.iconColor) {
-            event.iconColor = 'grey';
-        }
-    }
-
-
-    const timelineEvents = props.events.map((event, index) => (
+    return (
+        <Timeline>
+            {events.map((event, index) => (
         <TimelineItem key={index}>
             {(event.altText || event.altDescription) && (
                 <TimelineOppositeContent
@@ -48,20 +43,20 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                     color="text.secondary"
                 >
                     {event.altText && (
-                        <Typography level="body-md" component="span">
+                        <span className={"typography typography-body-md"}>
                             <strong>{event.altText}</strong>
-                        </Typography>
+                        </span>
                     )}
                     {event.altDescription && (
-                        <Typography>
+                        <p className={"typography"}>
                             {event.altDescription}
-                        </Typography>
+                        </p>
                     )}
                 </TimelineOppositeContent>
             )}
             <TimelineSeparator>
                 {index !== 0 && <TimelineConnector />}
-                <TimelineDot color={event.iconColor}>
+                <TimelineDot color={event.iconColor ? event.iconColor : 'grey'}>
                     {event.href ? (
                         <Link
                             href={event.href}
@@ -73,24 +68,19 @@ export default function MuiTimeline(props: MuiTimelineProps) {
                         event.icon
                     )}
                 </TimelineDot>
-                {index !== props.events.length - 1 && <TimelineConnector />}
+                {index !== events.length - 1 && <TimelineConnector />}
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
-                <Typography level="body-md" component="span">
+                <span className={"typography typography-body-md"}>
                     <strong>{event.title}</strong>
-                </Typography>
-                <Typography>
+                </span>
+                <p className={"typography"}>
                     {EMPHASISED_TEXTS.includes(event.description)
                         ? <em>{event.description}</em>
                         : event.description}
-                </Typography>
+                </p>
             </TimelineContent>
         </TimelineItem>
-    ));
-
-    return (
-        <Timeline>
-            {timelineEvents}
-        </Timeline>
-    );
+    ))}
+        </Timeline>);
 }

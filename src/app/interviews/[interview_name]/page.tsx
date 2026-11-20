@@ -1,43 +1,38 @@
 "use client"
-import * as React from 'react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import FileInfoCard from '@/components/domain/FileInfoCard';
+import InterviewPartCard, {InterviewPartCardProps} from '@/components/domain/InterviewPartCard';
+import InterviewPdfReport from '@/components/domain/InterviewPdfReport';
+import InterviewRunsheet from '@/components/domain/InterviewRunsheet';
 
-import Typography from '@mui/joy/Typography';
+import InterviewTimelineS from '@/components/domain/InterviewTimelineS';
+import QcForm from '@/components/domain/QcForm';
+import Transcript from '@/components/domain/TranscriptE';
+import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipelineStatus';
+import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
+import {Skeleton} from "@/components/ui/skeleton";
 
-import Alert from '@mui/material/Alert';
-import Skeleton from '@mui/material/Skeleton';
-import { SimpleTreeView } from '@mui/x-tree-view/SimpleTreeView';
-import { TreeItem } from '@mui/x-tree-view/TreeItem';
+import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import v2Interviews from "@/lib/api/v2/interviews";
+import {DbFile} from "@/lib/types/file";
+
+import {type Interview, Interview as ApiInterview, InterviewFile, InterviewPart} from '@/lib/types/interview';
 
 import Box from '@mui/material/Box';
 
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab from '@mui/joy/Tab';
-import TabPanel from '@mui/joy/TabPanel';
+import {SimpleTreeView} from '@mui/x-tree-view/SimpleTreeView';
+import {TreeItem} from '@mui/x-tree-view/TreeItem';
+import {useQuery} from "@tanstack/react-query";
 
-import { Descriptions } from 'antd';
-import type { DescriptionsProps } from 'antd';
-import { Typography as AntTypography } from 'antd';
-import { Empty } from 'antd';
+import {Descriptions, Empty, Typography as AntTypography} from 'antd';
+import Link from 'next/link';
+import * as React from 'react';
+import {SyntheticEvent, use} from 'react';
+import {z} from "zod";
 
-import { Interview } from '@/lib/types/interview';
-import FileInfoCard, { FileInfoCardProps } from '@/components/domain/FileInfoCard';
-import InterviewPartCard, { updateInterviewPartCardProps } from '@/components/domain/InterviewPartCard';
-
-import InterviewTimelineS from '@/components/domain/InterviewTimelineS';
-import InterviewRunsheet from '@/components/domain/InterviewRunsheet';
-import QcForm from '@/components/domain/QcForm';
-import Transcript from '@/components/domain/TranscriptE';
-import InterviewPdfReport from '@/components/domain/InterviewPdfReport';
-import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipelineStatus';
-
-const { Paragraph } = AntTypography;
+const {Paragraph} = AntTypography;
 
 
-
-function getInterviewPartInfo(interview_part_path: string, interview_data: Interview): updateInterviewPartCardProps | null {
+function getInterviewPartInfo(interview_part_path: string, interview_data: Interview): InterviewPartCardProps | null {
     for (const part of interview_data.parts) {
         if (part.interview_path === interview_part_path) {
             part.interview_name = interview_data.interview_name;
@@ -121,389 +116,325 @@ function interviewFileOnIgnore(
     setInterview(newInterview);
 }
 
+const File = z.object({
+    ...DbFile.shape,
+    ...InterviewFile.omit({interview_file: true}).shape,
+    relative_path: z.string(),
+});
+
+type File = z.infer<typeof File>;
+
+const Files = z.record(z.string(), InterviewFile);
+
+
+const Interview = z.object({
+    ...ApiInterview.omit({"parts": true}).shape,
+    parts: z.array(InterviewPart)
+});
+
+const ApiFiles = z.transform<Interview, Record<string, File>>((val: Interview, ctx) => {
+    const result: Record<string, File> = {};
+
+    for (const part of val.parts) {
+        const interviewPathParts = part.interview_path.split('/');
+        const partPath = interviewPathParts.slice(0, -1).join("/");
+        for (const file of part.interview_files) {
+            const relativePath = file.interview_file.file_path.replace(partPath, "");
+            result[file.interview_file.file_path] = {
+                ...file.interview_file,
+                interview_file_tags: file.interview_file_tags,
+                ignored: file.ignored,
+                relative_path: relativePath === file.interview_file.file_path ? file.interview_file.file_name : relativePath
+            }
+        }
+    }
+    return result;
+});
+
+
 // ts-ignore
 export default function Page({
-    params,
-}: {
+                                 params,
+                             }: {
     params: Promise<{ interview_name: string }>
 }) {
-    const [interviews, setInterviews] = useState<Interview | null>(null);
-    // const [interviewProcessingData, setInterviewProcessingData] = useState<InterviewProcessingData | null>(null);
-    const [interview_name, setInterview_name] = useState<string>('');
-    const [descriptionItems, setDescriptionItems] = useState<DescriptionsProps['items']>([]);
-    const [files, setFiles] = useState<Record<string, Record<string, any>> | null>({});
-    const [loading, setLoading] = React.useState(true);
 
-    const [lastSelectedItem, setLastSelectedItem] = React.useState<string | null>(
-        null,
-    );
-    const [selectedFileProps, setSelectedFileProps] = React.useState<FileInfoCardProps | null>(
-        null,
-    );
-    const [selectedPartProps, setSelectedPartProps] = React.useState<updateInterviewPartCardProps | null>(
+    const {interview_name: interviewName} = use(params);
+    const interviewInfoQuery = useQuery(v2Interviews.queries.interviewInfo(interviewName));
+    const transcriptionStatus = useQuery(v2Interviews.queries.interviewTranscriptionStatus(interviewName));
+    const [selectedPart, setSelectedPart] = React.useState(0);
+    const [selectedItem, setSelectedItem] = React.useState(0);
+    const [selectedItems, setSelectedItems] = React.useState<string | null>();
+    const [selectedPartProps, setSelectedPartProps] = React.useState<InterviewPartCardProps | null>(
         null,
     );
     const [currentAudioTime, setCurrentAudioTime] = React.useState<number>(0);
 
-
-    useEffect(() => {
-        const fetchData = async () => {
-            // console.log('Fetching interview data...');
-            // Get slug from the params
-            const { interview_name } = await params;
-            setInterview_name(interview_name);
-            // Fetch data from the API
-            const res = await fetch(`/api/v2/interviews/${interview_name}/info`);
-            if (!res.ok) {
-                setLoading(false);
-                throw new Error(`Failed to fetch interview data: ${res.status} ${res.statusText}`);
-            }
-            const data: Interview = await res.json();
-            setInterviews(data);
-            setLoading(false);
-
-            // // Fetch interview processing data
-            // const processingDataResponse = await fetch(`/api/v2/interviews/${interview_name}/processing`);
-            // if (processingDataResponse.ok) {
-            //     const processingData: InterviewProcessingData = await processingDataResponse.json();
-            //     setInterviewProcessingData(processingData);
-            // }
-        };
-        fetchData();
-    }, [params])
-
-    useEffect(() => {
-        if (!interviews) return;
-
-        const tempFiles: Record<string, Record<string, any>> = {};
-        // Add part_name to Interview Parts
-        interviews.parts.forEach(
-            (part, _) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
-                // Add last part of interview_path as part_name
-                const part_name = part.interview_path.split('/').pop();
-
-                (part as any).part_name = part_name;
-                part.interview_files.forEach(
-                    (file, _) => {  // eslint-disable-line @typescript-eslint/no-unused-vars
-                        const relative_path = file.interview_file.file_path.replace(part.interview_path + '/', '');
-                        if (relative_path === file.interview_file.file_path) {
-                            // Use just file name
-                            (file as any).relative_path = file.interview_file.file_name;
-                        } else {
-                            (file as any).relative_path = relative_path;
-                        }
-
-                        // Add file to files
-                        tempFiles[file.interview_file.file_path] = file.interview_file
-                        tempFiles[file.interview_file.file_path].interview_file_tags = file.interview_file_tags;
-
-                        tempFiles[file.interview_file.file_path].ignored = file.ignored;
-                    });
-            });
-
-        setFiles(tempFiles);
-
-        // parse to description items
-        const items = [
-            {
-            label: 'Interview Name',
-            children: <Paragraph copyable={{ text: interviews.interview_name }}>{interviews.interview_name ?? 'null'}</Paragraph>,
-            },
-            {
-            label: 'Interview Type',
-            children: interviews.interview_type,
-            },
-            {
-            label: 'Subject ID',
-            children: (
-                <Link href={`/studies/${interviews.study_id}/subjects/${interviews.subject_id}`}>
-                {interviews.subject_id}
-                </Link>
-            ),
-            },
-            {
-            label: 'Study ID',
-            children: interviews.study_id,
-            },
-            {
-            label: '# Parts',
-            children: interviews.parts.length,
-            },
-            {
-            label: '# Transcript Files',
-            children: interviews.transcript_files.length,
-            }
-        ];
-
-
-        setDescriptionItems(items);
-    }, [interviews]);
-
-    const handleItemSelectionToggle = (
-        event: React.SyntheticEvent,
-        itemId: string,
-        isSelected: boolean,
-    ) => {
+    function handleItemSelectionToggle(event: SyntheticEvent<Element, Event> | null, itemId: string, isSelected: boolean) {
         if (isSelected) {
             setLastSelectedItem(itemId);
         }
-    };
+    }
 
-    useEffect(() => {
-        if (lastSelectedItem && files && files[lastSelectedItem]) {
-            const fileProps: FileInfoCardProps = {
-                interview_name: interview_name,
-                file_path: files[lastSelectedItem].file_path,
-                file_name: files[lastSelectedItem].file_name,
-                file_size_mb: files[lastSelectedItem].file_size_mb,
-                m_time: new Date(files[lastSelectedItem].m_time),
-                md5: files[lastSelectedItem].md5,
-                tags: files[lastSelectedItem].interview_file_tags,
-                ignored: files[lastSelectedItem].ignored,
-                onTagsChange: (tags: string[]) => {
-                    interviewFileOnTagsChange(
-                        files[lastSelectedItem].file_path,
-                        interviews as Interview,
-                        tags,
-                        setInterviews,
-                    );
-                },
-                onIgnoredChange: (ignored: boolean) => {
-                    interviewFileOnIgnore(
-                        files[lastSelectedItem].file_path,
-                        interviews as Interview,
-                        ignored,
-                        setInterviews,
-                    );
-                },
-            };
+    if (interviewInfoQuery.isLoading || transcriptionStatus.isLoading) return (
+        <div>
+            <Skeleton/>
+            <div className='mb-32'>
+                <p className={"typeset typeset-title-md mb-3"}>
+                    <strong>Interview Info</strong>
+                </p>
+                <Skeleton className={"h-[150px]"}/>
 
-            setSelectedPartProps(null);
-            setSelectedFileProps(fileProps);
-        } else {
-            if (lastSelectedItem && files && !files[lastSelectedItem] && interviews) {
-                if (lastSelectedItem.startsWith('p_')) {
-                    const part_path = lastSelectedItem.replace('p_', '');
-                    const part = getInterviewPartInfo(part_path, interviews);
-                    setSelectedFileProps(null);
-                    setSelectedPartProps(part);
+                <p className={"typeset typeset-title-lg mt-3"}>
+                    <strong>Interview Parts</strong>
+                </p>
+
+                <div>
+                    <Skeleton className={"text-[3rem]"}/>
+                </div>
+
+                <p className={"typeset typeset-title-lg mt-3"}>
+                    <strong>Further Information</strong>
+                </p>
+
+                <Skeleton className={"height-[400px] mt-4"}/>
+            </div>
+        </div>
+    );
+
+    if (interviewInfoQuery.isError || transcriptionStatus.isError) return (
+        <div>
+            <Alert>
+                <AlertTitle>Interview not found</AlertTitle>
+                <AlertDescription>
+                    {interviewInfoQuery.error && (
+                        <p>{interviewInfoQuery.error.message}</p>
+                    )}
+                    {transcriptionStatus.error && (
+                        <p>{transcriptionStatus.error.message}</p>
+                    )}
+                </AlertDescription>
+            </Alert>
+            <div className='m-32'>
+                <Empty description="No interview data available"/>
+            </div>
+            <div className='mb-32'>
+                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                    <strong>Run Sheet</strong>
+                </p>
+                <InterviewRunsheet interviewName={interviewName}/>
+            </div>
+        </div>
+    )
+
+    if (interviewInfoQuery.isSuccess && transcriptionStatus.isSuccess) {
+        const interview = interviewInfoQuery.data;
+        const interviewPart = interview.parts[selectedPart];
+
+        function handleSelectItemChange(event: React.SyntheticEvent | null,
+                                        id: string | null) {
+            console.info("Selected item ", id);
+            if (id?.startsWith("p_")) {
+                for (const [idx, part] of interview.parts.entries()) {
+                    if (part.interview_path === id.slice(2)) {
+                        setSelectedPart(idx);
+                    }
+                }
+            } else {
+                for (const [idx, file] of interview.parts[selectedPart].interview_files.entries()) {
+                    if (file.interview_file.file_name === id) {
+                        if (selectedItem !== idx) {
+                            setSelectedItem(idx);
+                        }
+                    }
                 }
             }
+            setSelectedItems(id);
         }
-    }, [lastSelectedItem, files, interviews, interview_name]);
 
-    // function updateAudioTime(newTime: number) {
+        const descriptionItems = [
+            {
+                label: 'Interview Name',
+                children: <Paragraph
+                    copyable={{text: interview.interview_name}}>{interview.interview_name ?? 'null'}</Paragraph>,
+            },
+            {
+                label: 'Interview Type',
+                children: interview.interview_type,
+            },
+            {
+                label: 'Subject ID',
+                children: (
+                    <Link href={`/studies/${interview.study_id}/subjects/${interview.subject_id}`}>
+                        {interview.subject_id}
+                    </Link>
+                ),
+            },
+            {
+                label: 'Study ID',
+                children: interview.study_id,
+            },
+            {
+                label: '# Parts',
+                children: interview.parts.length,
+            },
+            {
+                label: '# Transcript Files',
+                children: interview.transcript_files.length,
+            }
+        ];
 
-    //     const audio = document.querySelector('audio');
-    //     if (audio) {
-    //         audio.currentTime = newTime;
-    //     }
-    //     const video = document.querySelector('video');
-    //     if (video) {
-    //         video.currentTime = newTime;
-    //     }
-    // }
-
-
-    return (
-        <div className="container mx-auto p-4">
-            {/* <Backdrop
+        return (
+            <div className="container mx-auto p-4">
+                {/* <Backdrop
                 sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
                 open={showBackDrop}
             >
                 <CircularProgress color="inherit" />
             </Backdrop> */}
-            <div>
-                <Typography level="h4">
-                    Interview Details
-                </Typography>
-                {loading ? (
-                    <Skeleton variant="text" sx={{ fontSize: '1.5rem' }} />
-                ) : (
-                    interview_name && (
-                        <Typography textColor="text.secondary" sx={{ mb: 2 }}>
-                            {interview_name}
-                        </Typography>
-                    )
-                )}
-            </div>
-
-            {loading ? (
-                <div className='mb-32'>
-                    <Typography level="title-md" sx={{ mb: 3 }}>
-                        <strong>Interview Info</strong>
-                    </Typography>
-                    <Skeleton variant="rectangular" sx={{ height: 150 }} />
-
-                    <Typography level="title-lg" sx={{ mt: 3 }}>
-                        <strong>Interview Parts</strong>
-                    </Typography>
-
-                    <div>
-                        <Skeleton variant="text" sx={{ fontSize: '3rem' }} />
-                    </div>
-
-                    <Typography level="title-lg" sx={{ mt: 3 }}>
-                        <strong>Further Information</strong>
-                    </Typography>
-
-                    <Skeleton variant="rectangular" sx={{ height: 400, mt: 4 }} />
+                <div>
+                    <h4 className={"typography typography-h4"}>
+                        Interview Details
+                    </h4>
+                    <p className={"typography text-(--mui-palette-text-secondary) mb-2"}>{interviewName}</p>
                 </div>
-            ) : (
-                interviews ? (
-                    <div className='mb-32'>
-                        <Descriptions
-                            title="Interview Info"
-                            bordered
-                            column={{ xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2 }}
-                            size='small'
-                            items={descriptionItems}
+                <div className='mb-32'>
+                    <Descriptions
+                        title="Interview Info"
+                        bordered
+                        column={{xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2}}
+                        size='small'
+                        items={descriptionItems}
+                    />
+
+                    <p className={"typeset typeset-title-lg mt-3"}>
+                        <strong>Interview Parts</strong>
+                    </p>
+
+                    <div className='m-4'>
+
+                        <FileInfoCard {
+                                          ...interviewPart.interview_files[selectedItem].interview_file
+                                      }
+                                      tags={interviewPart.interview_files[selectedItem].interview_file_tags}
+                                      ignored={interviewPart.interview_files[selectedItem].ignored}
+                                      interview_name={interview.interview_name}
+                                      onTagsChange={(tags: string[]) => {
+
+                                      }}
+                                      onIgnoredChange={(ignored: boolean) => {
+
+                                      }}
+                                      currentAudioTime={currentAudioTime}
+                                      setCurrentAudioTime={setCurrentAudioTime}
                         />
 
-                        <Typography level="title-lg" sx={{ mt: 3 }}>
-                            <strong>Interview Parts</strong>
-                        </Typography>
 
-                        <div className='m-4'>
-                            {lastSelectedItem && files && files[lastSelectedItem] && selectedFileProps?.interview_name && selectedFileProps?.file_path && selectedFileProps?.file_name && selectedFileProps?.file_size_mb && selectedFileProps?.m_time && (
-                                <FileInfoCard {
-                                    ...selectedFileProps as FileInfoCardProps
-                                }
-                                currentAudioTime={currentAudioTime}
-                                setCurrentAudioTime={setCurrentAudioTime}
-                                />
-                            )}
-                            {lastSelectedItem && files && !files[lastSelectedItem] && selectedPartProps && (
-                                <InterviewPartCard
-                                    interview_path={selectedPartProps.interview_path}
-                                    interview_name={selectedPartProps.interview_name || interview_name}
-                                    is_primary={selectedPartProps.is_primary}
-                                    is_duplicate={selectedPartProps.is_duplicate}
-                                    onChange={(is_primary, is_duplicate) => {
-                                        interviewPartOnChange(
-                                            selectedPartProps.interview_path,
-                                            interviews,
-                                            is_primary,
-                                            is_duplicate,
-                                            setInterviews,
-                                        );
-                                    }}
-                                />
-                            )}
-                        </div>
+                        <InterviewPartCard
+                            interview_path={interviewPart.interview_path}
+                            interview_name={interviewPart.interview_name || interviewName}
+                            is_primary={interviewPart.is_primary}
+                            is_duplicate={interviewPart.is_duplicate}
+                            onChange={(is_primary, is_duplicate) => {
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <h3>Interview Parts</h3>
+                        <SimpleTreeView defaultSelectedItems={`p_${interview.parts[0].interview_name}_0`}
+                                        selectedItems={selectedItems} onSelectedItemsChange={handleSelectItemChange}>
+                            {interview.parts.map((part, index) => (
 
-                        <SimpleTreeView onItemSelectionToggle={handleItemSelectionToggle}>
-                            {interviews.parts.map((part, index) => (
-                                <TreeItem key={index} itemId={'p_' + part.interview_path} label={(part as any).part_name}>
+                                <TreeItem key={index} itemId={`p_${part.interview_name}_${index}`}
+                                          label={`${part.interview_path.split("/").pop()}`}>
                                     {part.interview_files.map((file, fileIndex) => (
-                                        <TreeItem key={fileIndex} itemId={file.interview_file.file_path} label={(file as any).relative_path} />
+                                        <TreeItem key={fileIndex} itemId={file.interview_file.file_name}
+                                                  label={file.interview_file.file_name}/>
                                     ))}
                                 </TreeItem>
                             ))}
                         </SimpleTreeView>
+                    </div>
+                    <p className={"typeset typeset-title-lg mt-3"}>
+                        <strong>Further Information</strong>
+                    </p>
 
-                        <Typography level="title-lg" sx={{ mt: 3 }}>
-                            <strong>Further Information</strong>
+                    <Box
+                        // sx={{ display: { xs: 'block', md: 'none' }}}
+                    >
+                        <Tabs aria-label="Basic tabs" defaultValue={"timeline"} className={"mt-3"}>
+                            <TabsList>
+                                <TabsTrigger value={"timeline"}>⏱️ Interview Timeline</TabsTrigger>
+                                <TabsTrigger value={"runsSheet"}>📝 Run Sheet</TabsTrigger>
+                                <TabsTrigger value={"issues"}>🚩 QC Issues</TabsTrigger>
+                                <TabsTrigger value={"report"}>📄 PDF Report</TabsTrigger>
+                                <TabsTrigger value={"transcript"}>📄 Transcript</TabsTrigger>
+                                <TabsTrigger value={"pipeline"}>🔊 Transcription Pipeline</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value={"timeline"}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                                    <strong>Interview Timeline</strong>
+                                </p>
+
+                                <InterviewTimelineS interviewName={interviewName}/>
+                            </TabsContent>
+                            <TabsContent value={"runsSheet"}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                                    <strong>Run Sheet</strong>
+                                </p>
+
+                                <InterviewRunsheet interviewName={interviewName}/>
+                            </TabsContent>
+                            <TabsContent value={"issues"}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                                    <strong>QC Issues</strong>
+                                </p>
+
+                                <QcForm interviewName={interviewName}/>
+                            </TabsContent>
+                            <TabsContent value={"report"}>
+                                <InterviewPdfReport interviewName={interviewName}/>
+                            </TabsContent>
+                            <TabsContent value={"transcript"}>
+                                <Transcript
+                                    identifier={interviewName} identifier_type='interview'
+                                    currentAudioTime={currentAudioTime}
+                                    updateAudioTime={setCurrentAudioTime}
+                                />
+                            </TabsContent>
+                            <TabsContent value={"pipeline"}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3 mb-2 "}>
+                                    <strong>Transcription Pipeline</strong>
+                                </p>
+                                <TranscriptionPipelineStatus status={transcriptionStatus.data}/>
+                            </TabsContent>
+                        </Tabs>
+                    </Box>
+
+                    {/* <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ width: '100%', display: { xs: 'none', md: 'flex' } }}
+                >
+                    <Box sx={{ width: '50%' }}>
+                        <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                            <strong>Interview Timeline</strong>
                         </Typography>
 
-                        <Box
-                        // sx={{ display: { xs: 'block', md: 'none' }}}
-                        >
-                            <Tabs aria-label="Basic tabs" defaultValue={0} sx={{ mt: 3 }}>
-                                <TabList>
-                                    <Tab>⏱️ Interview Timeline</Tab>
-                                    <Tab>📝 Run Sheet</Tab>
-                                    <Tab>🚩 QC Issues</Tab>
-                                    <Tab>📄 PDF Report</Tab>
-                                    <Tab>📄 Transcript</Tab>
-                                    <Tab>🔊 Transcription Pipeline</Tab>
-                                </TabList>
-                                <TabPanel value={0}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                        <strong>Interview Timeline</strong>
-                                    </Typography>
+                        <InterviewTimelineS interviewName={interview_name} />
+                    </Box>
+                    <Box sx={{ width: '50%' }}>
+                        <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3"}>
+                            <strong>Run Sheet</strong>
+                        </Typography>
 
-                                    <InterviewTimelineS interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={1}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                        <strong>Run Sheet</strong>
-                                    </Typography>
+                        <InterviewRunsheet interviewName={interview_name} />
 
-                                    <InterviewRunsheet interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={2}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                        <strong>QC Issues</strong>
-                                    </Typography>
+                    </Box>
+                </Stack> */}
 
-                                    <QcForm interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={3}>
-                                    <InterviewPdfReport interviewName={interview_name} />
-                                </TabPanel>
-                                <TabPanel value={4}>
-                                    <Transcript
-                                        identifier={interview_name} identifier_type='interview'
-                                        currentAudioTime={currentAudioTime}
-                                        updateAudioTime={setCurrentAudioTime}
-                                    />
-                                </TabPanel>
-                                <TabPanel value={5}>
-                                    <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3, mb: 2 }}>
-                                        <strong>Transcription Pipeline</strong>
-                                    </Typography>
-
-                                    <TranscriptionPipelineStatus
-                                        identifier={interview_name}
-                                        identifier_type='interview'
-                                    />
-                                </TabPanel>
-                            </Tabs>
-                        </Box>
-
-                        {/* <Stack 
-                            direction="row" 
-                            spacing={2}
-                            sx={{ width: '100%', display: { xs: 'none', md: 'flex' } }}
-                        >
-                            <Box sx={{ width: '50%' }}>
-                                <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                    <strong>Interview Timeline</strong>
-                                </Typography>
-
-                                <InterviewTimelineS interviewName={interview_name} />
-                            </Box>
-                            <Box sx={{ width: '50%' }}>
-                                <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                    <strong>Run Sheet</strong>
-                                </Typography>
-
-                                <InterviewRunsheet interviewName={interview_name} />
-
-                            </Box>
-                        </Stack> */}
-
-                    </div>
-                ) : (
-                    <div>
-                        <Alert severity="error">Interview not found</Alert>
-
-                        <div className='m-32'>
-                            <Empty description="No interview data available" />
-                        </div>
-
-                        <div className='mb-32'>
-                            <Typography level="title-lg" textColor="text.secondary" sx={{ mt: 3 }}>
-                                <strong>Run Sheet</strong>
-                            </Typography>
-
-                            <InterviewRunsheet interviewName={interview_name} />
-                        </div>
-                    </div>
-                )
-            )}
-
-        </div>
-    )
+                </div>
+            </div>
+        )
+    }
 }

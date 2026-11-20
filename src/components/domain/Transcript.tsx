@@ -1,6 +1,6 @@
+import {TranscriptSkeleton} from "@/components/domain/TranscriptE";
 import { useEffect, useState } from 'react';
 
-import { Skeleton } from '@mui/material';
 import { ExpandLess } from '@mui/icons-material';
 
 import { Empty } from 'antd';
@@ -146,7 +146,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
             {!loading ? (
                 <div className="p-4 max-w-full relative">
                     <div className="bg-white rounded-lg shadow-sm p-6 font-light text-gray-800 leading-relaxed">
-                        <pre className="whitespace-pre-wrap break-words text-base">{transcriptData}</pre>
+                        <pre className="whitespace-pre-wrap wrap-break-word text-base">{transcriptData}</pre>
                     </div>
 
                     {transcriptData && (
@@ -161,23 +161,7 @@ export default function Transcript(props: InterviewTranscriptProps) {
                     )}
                 </div>
             ) : (
-                <div className="p-4">
-                    {Array(5).fill(0).map((_, i) => (
-                        <div key={i} className="mb-6">
-                            <Skeleton variant="text" width="30%" height={28} className="mb-2" />
-
-                            {Array(2 + Math.floor(Math.random() * 4)).fill(0).map((_, j) => (
-                                <Skeleton
-                                    key={j}
-                                    variant="text"
-                                    width={`${70 + Math.random() * 30}%`}
-                                    height={24}
-                                    className="my-1"
-                                />
-                            ))}
-                        </div>
-                    ))}
-                </div>
+                <TranscriptSkeleton />
             )}
 
         </div>

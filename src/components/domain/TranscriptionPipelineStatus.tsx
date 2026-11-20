@@ -1,65 +1,20 @@
 "use client"
-import { useEffect, useState } from 'react';
-
 import { Descriptions } from 'antd';
 import type { DescriptionsProps } from 'antd';
 import { Empty } from 'antd';
 
 import Skeleton from '@mui/material/Skeleton';
-import Chip from '@mui/joy/Chip';
+import {Badge} from "@/components/ui/badge";
 
 import { TranscriptionPipelineStatus as StatusType } from '@/lib/types/transcribeme';
 
-export type TranscriptionPipelineStatusProps = {
-    identifier: string;
-    identifier_type: 'interview' | 'audio_journal';
-    study_id?: string;
-    subject_id?: string;
-};
+export function TranscriptionPipelineStatusSkeleton(){
+    return <Skeleton variant="rectangular" height={300} sx={{ mt: 2 }} />;
+}
 
-export default function TranscriptionPipelineStatus(props: TranscriptionPipelineStatusProps) {
-    const { identifier, identifier_type, study_id, subject_id } = props;
-    const [status, setStatus] = useState<StatusType | null>(null);
-    const [loading, setLoading] = useState(true);
+export default function TranscriptionPipelineStatus({status}:{status: StatusType}) {
 
-    useEffect(() => {
-        const fetchInterviewStatus = async (interviewName: string) => {
-            const res = await fetch(`/api/v2/interviews/${interviewName}/transcription-status`);
-            if (res.ok) {
-                setStatus(await res.json());
-            }
-            setLoading(false);
-        };
-
-        const fetchJournalStatus = async (studyId: string, subjectId: string, journalName: string) => {
-            const res = await fetch(
-                `/api/v3/studies/${studyId}/subjects/${subjectId}/audioJournals/${journalName}/transcription-status`
-            );
-            if (res.ok) {
-                setStatus(await res.json());
-            }
-            setLoading(false);
-        };
-
-        if (!identifier) {
-            return;
-        }
-        if (identifier_type === 'interview') {
-            fetchInterviewStatus(identifier);
-        } else if (identifier_type === 'audio_journal') {
-            if (!study_id || !subject_id) {
-                setLoading(false);
-                return;
-            }
-            fetchJournalStatus(study_id, subject_id, identifier);
-        }
-    }, [identifier, identifier_type, study_id, subject_id]);
-
-    if (loading) {
-        return <Skeleton variant="rectangular" height={300} sx={{ mt: 2 }} />;
-    }
-
-    if (!status || !status.wav_conversion) {
+    if (!status.wav_conversion) {
         return (
             <div className="m-16">
                 <Empty description="This recording has not entered the dpinterview transcription pipeline yet" />
@@ -111,7 +66,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>1. WAV Conversion</strong>
-                    <Chip color="success" size="sm">Done</Chip>
+                    <Badge color="success">Done</Badge>
                 </div>
                 <Descriptions bordered size="small" column={1} items={wavConversionItems} />
             </div>
@@ -120,11 +75,11 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
                 <div className="flex items-center gap-2 mb-2">
                     <strong>2. Audio QC</strong>
                     {audio_qc ? (
-                        <Chip color={audio_qc.aqc_passed ? 'success' : 'danger'} size="sm">
+                        <Badge color={audio_qc.aqc_passed ? 'success' : 'danger'}>
                             {audio_qc.aqc_passed ? 'Passed' : 'Failed'}
-                        </Chip>
+                        </Badge>
                     ) : (
-                        <Chip color="neutral" size="sm">Not Run</Chip>
+                        <Badge color="neutral">Not Run</Badge>
                     )}
                 </div>
                 {audio_qc ? (
@@ -137,7 +92,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>3. Pushed to TranscribeMe</strong>
-                    <Chip color={push ? 'success' : 'neutral'} size="sm">{push ? 'Done' : 'Not Yet'}</Chip>
+                    <Badge color={push ? 'success' : 'neutral'}>{push ? 'Done' : 'Not Yet'}</Badge>
                 </div>
                 {push ? (
                     <Descriptions bordered size="small" column={1} items={pushItems} />
@@ -149,7 +104,7 @@ export default function TranscriptionPipelineStatus(props: TranscriptionPipeline
             <div>
                 <div className="flex items-center gap-2 mb-2">
                     <strong>4. Pulled from TranscribeMe</strong>
-                    <Chip color={pull ? 'success' : 'neutral'} size="sm">{pull ? 'Done' : 'Not Yet'}</Chip>
+                    <Badge color={pull ? 'success' : 'neutral'}>{pull ? 'Done' : 'Not Yet'}</Badge>
                 </div>
                 {pull ? (
                     <Descriptions bordered size="small" column={1} items={pullItems} />

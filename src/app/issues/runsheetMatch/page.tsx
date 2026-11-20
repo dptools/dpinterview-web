@@ -2,8 +2,7 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
-import Typography from '@mui/joy/Typography';
-import Alert from '@mui/joy/Alert';
+import {Alert, AlertDescription} from '@/components/ui/alert';
 import { GridColDef } from '@mui/x-data-grid';
 import Link from '@mui/material/Link';
 
@@ -103,38 +102,40 @@ export default function RunsheetMatchIndex() {
 
     return (
         <div className="container mx-auto p-4">
-            <Typography level="h2" sx={{ mb: 4, fontWeight: 'bold', color: 'primary.main' }}>
+            <h2 className={"typeset typeset-h2 mb-4 font-bold text-(--mui-palette-primary.main)"}>
                 Runsheet Match
-            </Typography>
+            </h2>
 
-            <Alert variant="soft" color="neutral" sx={{ mb: 4 }}>
-                Subjects with raw interview files the crawler couldn&apos;t date - a file or
-                directory name that couldn&apos;t be date-parsed, or a media file sitting loose in an
-                interview type folder - so they were skipped entirely and never imported. These are
-                strong candidates for the &quot;Missing Interviews&quot; on the same subject: matching
-                such a file to its runsheet entry recovers it without renaming or moving anything on
-                disk. Click a subject to compare its
-                unmatched files against its missing runsheet entries.
+            <Alert className={"mb-4 text-neutral-600"}>
+                <AlertDescription>
+                    Subjects with raw interview files the crawler couldn&apos;t date - a file or
+                    directory name that couldn&apos;t be date-parsed, or a media file sitting loose in an
+                    interview type folder - so they were skipped entirely and never imported. These are
+                    strong candidates for the &quot;Missing Interviews&quot; on the same subject: matching
+                    such a file to its runsheet entry recovers it without renaming or moving anything on
+                    disk. Click a subject to compare its
+                    unmatched files against its missing runsheet entries.
+                </AlertDescription>
             </Alert>
 
             {!dataGridProps ? (
                 <div className="flex justify-center items-center h-64">
                     <div className="animate-pulse text-center">
                         <div className="h-6 w-32 bg-gray-200 rounded mb-4 mx-auto"></div>
-                        <Typography level="body-sm" color="neutral">Loading data...</Typography>
+                        <p className={"typeset typeset-body-sm"} color="neutral">Loading data...</p>
                     </div>
                 </div>
             ) : dataGridProps.rows.length === 0 ? (
                 <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-                    <Typography level="body-md">
+                    <p className={"typeset typeset-body-md"}>
                         No subjects with unmatched files found.
-                    </Typography>
+                    </p>
                 </div>
             ) : (
                 <>
-                    <Typography level="body-md" sx={{ mb: 2, fontWeight: 'medium', color: 'neutral.600' }}>
+                    <p className={"typeset typeset-body-md mb-2 font-medium text-neutral-600"}>
                         The following {dataGridProps.rows.length} subjects have unmatched files:
-                    </Typography>
+                    </p>
 
                     <AggregationSummary
                         rows={failures ?? []}
