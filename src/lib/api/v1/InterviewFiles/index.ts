@@ -1,0 +1,1 @@
+export * as mutations from "@/lib/api/v1/InterviewFiles/mutations"

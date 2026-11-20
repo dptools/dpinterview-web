@@ -1,37 +1,34 @@
 "use client"
-import v2Interviews from "@/lib/api/v2/interviews";
+import {mutations} from "@/lib/api/v1/InterviewFiles";
+import v2Interviews, {interviewsKeys} from "@/lib/api/v2/interviews";
 import {File} from "@/lib/types/file";
 import {InterviewFile} from "@/lib/types/interview";
-import {useMutation} from "@tanstack/react-query";
-import * as React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-
-import { Descriptions } from 'antd';
-import { Typography } from 'antd';
-import type { DescriptionsProps } from 'antd';
-
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import ButtonGroup from '@mui/material/ButtonGroup';
+import {GraphicEq, InterpreterMode, Person, Visibility, VisibilityOff} from '@mui/icons-material';
+import AudioFile from '@mui/icons-material/AudioFile';
 
 import DeleteIcon from '@mui/icons-material/Delete';
-import QuestionMark from '@mui/icons-material/QuestionMark';
-import AudioFile from '@mui/icons-material/AudioFile';
-import VideoFile from '@mui/icons-material/VideoFile';
 import People from '@mui/icons-material/People';
-import { InterpreterMode } from '@mui/icons-material';
-import { Person } from '@mui/icons-material';
-import { GraphicEq } from '@mui/icons-material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import QuestionMark from '@mui/icons-material/QuestionMark';
+import VideoFile from '@mui/icons-material/VideoFile';
+import ButtonGroup from '@mui/material/ButtonGroup';
 
-import { toast } from "sonner";
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
-const { Paragraph } = Typography;
+import type {DescriptionsProps} from 'antd';
+import {Descriptions, Typography} from 'antd';
+import {formatDistanceToNow} from 'date-fns';
+import * as React from 'react';
+
+import {toast} from "sonner";
+
+const {Paragraph} = Typography;
 
 
-export interface FileInfoCardProps extends File, Omit<InterviewFile, "interview_file"|"interview_file_tags"> {
+export interface FileInfoCardProps extends File, Omit<InterviewFile, "interview_file" | "interview_file_tags"> {
     interview_name: string;
     tags: string[];
     onTagsChange?: (tags: string[]) => void;
@@ -62,22 +59,22 @@ function removeRoles(
             'Content-Type': 'application/json',
         },
     })
-    .then(response => {
-        if (!response.ok) {
-            // console.error(response);
-            throw new Error('Failed to remove roles');
-        }
-        return response.json();
-    })
-    .then((data) => {
-        // Update the tags in the props
-        const new_tags: string = data.new_tags;
-        const new_tags_array: string[] = new_tags.split(',').map((tag: string) => tag.trim());
-        // Update the UI
-        if (props.onTagsChange) {
-            props.onTagsChange(new_tags_array);
-        }
-    })
+        .then(response => {
+            if (!response.ok) {
+                // console.error(response);
+                throw new Error('Failed to remove roles');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Update the tags in the props
+            const new_tags: string = data.new_tags;
+            const new_tags_array: string[] = new_tags.split(',').map((tag: string) => tag.trim());
+            // Update the UI
+            if (props.onTagsChange) {
+                props.onTagsChange(new_tags_array);
+            }
+        })
 
     return Promise.resolve();
 }
@@ -100,74 +97,45 @@ function setRole(
             'Content-Type': 'application/json',
         },
     })
-    .then(response => {
-        if (!response.ok) {
-            // console.error(response);
-            throw new Error('Failed to set roles');
-        }
-        return response.json();
-    })
-    .then((data) => {
-        // Update the tags in the props
-        const new_tags: string = data.new_tags;
-        const new_tags_array: string[] = new_tags.split(',').map((tag: string) => tag.trim());
-        // Update the UI
-        if (props.onTagsChange) {
-            props.onTagsChange(new_tags_array);
-        }
-    })
+        .then(response => {
+            if (!response.ok) {
+                // console.error(response);
+                throw new Error('Failed to set roles');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // Update the tags in the props
+            const new_tags: string = data.new_tags;
+            const new_tags_array: string[] = new_tags.split(',').map((tag: string) => tag.trim());
+            // Update the UI
+            if (props.onTagsChange) {
+                props.onTagsChange(new_tags_array);
+            }
+        })
 
     return Promise.resolve();
 }
 
-async function toggleIgnored(props: FileInfoCardProps): Promise<void> {
-    const interview_name = props.interview_name;
-    const file_path = props.file_path;
-
-    const body: Record<string, any> = {};
-    body.interview_name = interview_name;
-    body.file_path = file_path;
-    body.ignored = !props.ignored;
-
-    fetch(`/api/v1/interview-files/set-ignore`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to toggle ignored state');
-        }
-    })
-    .then(() => {
-        // Update the ignored state in the props
-        if (props.onIgnoredChange) {
-            props.onIgnoredChange(!props.ignored);
-        }
-    });
-}
-
 export default function FileInfoCard(props: FileInfoCardProps) {
-    const { currentAudioTime,file_path,interview_name } = props;
-    const clearTags = useMutation(v2Interviews.mutations.interviewClearAudioRole(interview_name,file_path));
-
-
+    const {currentAudioTime, file_path, interview_name} = props;
+    const clearTags = useMutation(v2Interviews.mutations.interviewClearAudioRole(interview_name, file_path));
+    const setIgnored = useMutation(mutations.setIgnore());
+    const client = useQueryClient();
 
     React.useEffect(() => {
-        if (currentAudioTime) {
-            // Get player element
-            const player = document.getElementById('player') as HTMLAudioElement | HTMLVideoElement;
-            if (player) {
-                const currentTime = player.currentTime;
-                if (Math.abs(currentTime - currentAudioTime) > 2) {
-                    player.currentTime = currentAudioTime;
+            if (currentAudioTime) {
+                // Get player element
+                const player = document.getElementById('player') as HTMLAudioElement | HTMLVideoElement;
+                if (player) {
+                    const currentTime = player.currentTime;
+                    if (Math.abs(currentTime - currentAudioTime) > 2) {
+                        player.currentTime = currentAudioTime;
+                    }
                 }
             }
         }
-    }
-    , [currentAudioTime]);
+        , [currentAudioTime]);
 
     // file_path = '/mnt/ProNET/Lochness/PHOENIX/PROTECTED/PronetXX/raw/XXXXXXX/interviews/open/YYYY-MM-DD 12.00.00 RENAME BL NLP/Audio Record/audio.m4a'
     // const file_path_pretty: string | null = props.file_path ? 'PHOENIX' + (props.file_path.split('PHOENIX')[1] || props.file_path) : null;
@@ -177,7 +145,7 @@ export default function FileInfoCard(props: FileInfoCardProps) {
         {
             key: '1',
             label: 'File Name',
-            children: <Paragraph copyable={{ text: props.file_path }}>{props.file_name ?? 'null'}</Paragraph>,
+            children: <Paragraph copyable={{text: props.file_path}}>{props.file_name ?? 'null'}</Paragraph>,
         },
         {
             key: '2',
@@ -208,18 +176,28 @@ export default function FileInfoCard(props: FileInfoCardProps) {
                     <ButtonGroup variant="text" aria-label="ignore-toggle" size="small">
                         <Tooltip title={props.ignored ? "Unignore file" : "Ignore file"}>
                             <IconButton aria-label="toggle-ignore" onClick={() => {
-                                const promise = toggleIgnored(props);
-                                toast.promise(promise, {
-                                    loading: props.ignored ? 'Unignoring file...' : 'Ignoring file...',
-                                    success: props.ignored ? 'File unignored' : 'File ignored',
-                                    error: 'Failed to toggle ignored',
+                                setIgnored.mutate({
+                                    file_path: props.file_path,
+                                    ignored: !props.ignored,
+                                    interview_name: props.interview_name
+                                }, {
+                                    onSuccess: (data) => {
+                                        // Trigger interview reload and signal success.
+                                        client.invalidateQueries({queryKey:interviewsKeys.interviewInfo(interview_name)}).then(()=>{
+                                            toast.success(data.ignored ? 'File unignored' : 'File ignored');
+                                        })
+                                    },
+                                    onError: (error) => {
+                                        console.error("Error: ",error.message);
+                                        toast.error('Failed to toggle ignored');
+                                    },
                                 });
                             }}>
                                 {/* Use VisibilityOff for ignored, Visibility for not ignored */}
                                 {props.ignored ? (
-                                    <VisibilityOff color="error" />
+                                    <VisibilityOff color="error"/>
                                 ) : (
-                                    <Visibility color="inherit" />
+                                    <Visibility color="inherit"/>
                                 )}
                             </IconButton>
                         </Tooltip>
@@ -235,28 +213,28 @@ export default function FileInfoCard(props: FileInfoCardProps) {
         // let isDiarized = false;
         let isAudio = false;
         for (let i = 0; i < props.tags.length; i++) {
-            let icon: React.ReactNode = <QuestionMark />;
+            let icon: React.ReactNode = <QuestionMark/>;
             let color: "error" | "default" | "primary" | "secondary" | "info" | "success" | "warning" = 'default';
             if (props.tags[i].toLowerCase().includes('video')) {
-                icon = <VideoFile />;
+                icon = <VideoFile/>;
                 color = 'secondary';
             } else if (props.tags[i].toLowerCase().includes('audio')) {
                 isAudio = true;
-                icon = <AudioFile />;
+                icon = <AudioFile/>;
                 color = 'primary';
                 render_element = 'audio';
             } else if (props.tags[i].toLowerCase().includes('diarized')) {
-                icon = <People />;
+                icon = <People/>;
                 color = 'info';
                 // isDiarized = true;
             } else if (props.tags[i].toLowerCase().includes('interviewer')) {
-                icon = <InterpreterMode />;
+                icon = <InterpreterMode/>;
                 color = 'warning';
             } else if (props.tags[i].toLowerCase().includes('participant')) {
-                icon = <Person />;
+                icon = <Person/>;
                 color = 'success';
             } else if (props.tags[i].toLowerCase().includes('combined')) {
-                icon = <GraphicEq />;
+                icon = <GraphicEq/>;
             } else {
                 color = 'error';
             }
@@ -273,61 +251,61 @@ export default function FileInfoCard(props: FileInfoCardProps) {
 
         const subStack = <Stack direction="row" spacing={1}>{stack}</Stack>;
 
-        const roleButtonGroup = 
-                <ButtonGroup variant="text" aria-label="role-change" size='small'>
-                    <Tooltip title="Mark as Interviewer">
-                        <IconButton aria-label="interviewer" key="interviewer" onClick={() => {
-                            const promise = setRole(props, 'interviewer');
-                            toast.promise(promise, {
-                                loading: 'Marking as Interviewer...',
-                                success: 'Marked as Interviewer',
-                                error: 'Failed to mark as Interviewer',
-                            });
-                        }
-                        }>
-                            <InterpreterMode color="warning" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Mark as Subject">
-                        <IconButton aria-label="subject" key="subject" onClick={() => {
-                            const promise = setRole(props, 'participant');
-                            toast.promise(promise, {
-                                loading: 'Marking as Subject...',
-                                success: 'Marked as Subject',
-                                error: 'Failed to mark as Subject',
-                            });
-                        }
-                        }>
-                            <Person color="success" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Mark as Combined">
-                        <IconButton aria-label="combined" key="combined" onClick={() => {
-                            const promise = setRole(props, 'combined');
-                            toast.promise(promise, {
-                                loading: 'Marking as Combined...',
-                                success: 'Marked as Combined',
-                                error: 'Failed to mark as Combined',
-                            });
-                        }
-                        }>
-                            <GraphicEq color="info" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Clear Roles">
-                        <IconButton aria-label="delete" key="delete" onClick={() => {
-                            const promise = removeRoles(props);
-                            toast.promise(promise, {
-                                loading: 'Removing roles...',
-                                success: 'Roles removed',
-                                error: 'Failed to remove roles',
-                            });
-                        }
-                        }>
-                            <DeleteIcon color="error" />
-                        </IconButton>
-                    </Tooltip>
-                </ButtonGroup>
+        const roleButtonGroup =
+            <ButtonGroup variant="text" aria-label="role-change" size='small'>
+                <Tooltip title="Mark as Interviewer">
+                    <IconButton aria-label="interviewer" key="interviewer" onClick={() => {
+                        const promise = setRole(props, 'interviewer');
+                        toast.promise(promise, {
+                            loading: 'Marking as Interviewer...',
+                            success: 'Marked as Interviewer',
+                            error: 'Failed to mark as Interviewer',
+                        });
+                    }
+                    }>
+                        <InterpreterMode color="warning"/>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Mark as Subject">
+                    <IconButton aria-label="subject" key="subject" onClick={() => {
+                        const promise = setRole(props, 'participant');
+                        toast.promise(promise, {
+                            loading: 'Marking as Subject...',
+                            success: 'Marked as Subject',
+                            error: 'Failed to mark as Subject',
+                        });
+                    }
+                    }>
+                        <Person color="success"/>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Mark as Combined">
+                    <IconButton aria-label="combined" key="combined" onClick={() => {
+                        const promise = setRole(props, 'combined');
+                        toast.promise(promise, {
+                            loading: 'Marking as Combined...',
+                            success: 'Marked as Combined',
+                            error: 'Failed to mark as Combined',
+                        });
+                    }
+                    }>
+                        <GraphicEq color="info"/>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip title="Clear Roles">
+                    <IconButton aria-label="delete" key="delete" onClick={() => {
+                        const promise = removeRoles(props);
+                        toast.promise(promise, {
+                            loading: 'Removing roles...',
+                            success: 'Roles removed',
+                            error: 'Failed to remove roles',
+                        });
+                    }
+                    }>
+                        <DeleteIcon color="error"/>
+                    </IconButton>
+                </Tooltip>
+            </ButtonGroup>
 
         const tagsComponent = (
             <div className="flex flex-row">
@@ -355,7 +333,7 @@ export default function FileInfoCard(props: FileInfoCardProps) {
                             id="player"
                             src={`http://localhost:45000/payload=%5B${props.file_path}%5D`}
                             controls
-                            style={{ width: '100%' }}
+                            style={{width: '100%'}}
                             onError={() => {
                                 toast.error("Failed to load audio file. The file may be missing or the media server is not running.");
                             }}
@@ -387,7 +365,7 @@ export default function FileInfoCard(props: FileInfoCardProps) {
 
             <Descriptions
                 bordered
-                column={{ xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2 }}
+                column={{xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2}}
                 size='small'
                 items={items}
             />

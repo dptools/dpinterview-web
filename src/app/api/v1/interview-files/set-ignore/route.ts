@@ -1,23 +1,26 @@
-import { InterviewFiles } from "@/lib/models/InterviewFiles";
+import {SetIgnore, SetIgnoreSuccess} from "@/lib/api/v1/InterviewFiles/types";
+import {InterviewFiles} from "@/lib/models/InterviewFiles";
+import {BasicErrorResponse} from "@/lib/types/api";
+import {NextResponse} from "next/server";
+
+const {DashboardActions} = await import("@/lib/models/DashboardActions");
 
 export async function POST(request: Request): Promise<Response> {
     try {
         const body = await request.json();
-        const { file_path, ignored, interview_name } = body;
-        if (!file_path || typeof ignored !== "boolean") {
-            return new Response(JSON.stringify({ error: "Missing file_path or ignored parameter" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            });
+        const result = await SetIgnore.safeDecodeAsync(body);
+
+        if (!result.success) {
+            return NextResponse.json(await BasicErrorResponse.encodeAsync({error: result.error.message}), {status: 400});
         }
 
+        const {file_path, ignored, interview_name} = result.data;
+
         // Record dashboard action
-        const action = ignored ? "mark_ignored" : "unmark_ignored";
         try {
-            const { DashboardActions } = await import("@/lib/models/DashboardActions");
             await DashboardActions.recordAction(
                 interview_name || "unknown",
-                action,
+                ignored ? "mark_ignored" : "unmark_ignored",
                 file_path,
                 "file_path"
             );
@@ -28,14 +31,9 @@ export async function POST(request: Request): Promise<Response> {
 
         await InterviewFiles.setIgnoreFile(file_path, ignored);
 
-        return new Response(JSON.stringify({ success: true }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
+        return NextResponse.json(await SetIgnoreSuccess.encodeAsync({success: true}));
+
     } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-        });
+        return NextResponse.json(await BasicErrorResponse.encodeAsync({error: error.message || "Unknown error"}), {status: 500,});
     }
 }

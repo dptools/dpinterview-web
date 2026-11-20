@@ -34,3 +34,9 @@ export const AudioTagClearUpdate = z.object({
 export const AudioTagClearRequest = z.object({
     audio_path: z.string(),
 })
+
+export const BasicErrorResponse = z.object({
+    error: z.string(),
+})
+
+export type BasicErrorResponse = z.infer<typeof BasicErrorResponse>;

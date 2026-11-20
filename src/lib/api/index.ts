@@ -1,3 +1,4 @@
+import {InterviewPartUpdate} from "@/app/api/v1/interview-parts/route";
 import {ApiError} from "next/dist/server/api-utils";
 import {z} from "zod";
 
@@ -28,3 +29,14 @@ export const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
     decode: (isoString) => new Date(isoString),
     encode: (date) => date.toISOString(),
 });
+
+export async function postJson(input: string | URL | Request, body: object, init? : Omit<RequestInit,"body">){
+    return fetch(input, {
+        ...init,
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+}

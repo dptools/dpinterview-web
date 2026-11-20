@@ -336,10 +336,8 @@ export default function Page({
                             is_primary={interviewPart.is_primary}
                             is_duplicate={interviewPart.is_duplicate}
                             onChange={(is_primary, is_duplicate) => {
-
                             }}
                         />
-
                     </div>
                     <div>
                         <h3>Interview Parts</h3>

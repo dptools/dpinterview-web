@@ -1,7 +1,7 @@
 'use client'
 import MuiDataGrid from '@/components/mui/MuiDataGrid';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
-import InterviewApi from "@/lib/api/v1/interviews";
+import {queries} from "@/lib/api/v1/Interviews";
 import {DbInterview} from "@/lib/types/interview";
 import {Dashboard} from '@mui/icons-material';
 
@@ -16,7 +16,7 @@ function getRowId(row: DbInterview) {
 }
 
 export default function Interviews() {
-    const {isSuccess, data: interviews, isError, error, isLoading} = useQuery(InterviewApi.list({limit: 20_000}));
+    const {isSuccess, data: interviews, isError, error, isLoading} = useQuery(queries.list({limit: 20_000}));
     const height = 670;
     const pageSizeOptions = [10, 20];
     const selectable = true;

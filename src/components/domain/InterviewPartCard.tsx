@@ -1,5 +1,7 @@
+import {mutations} from "@/lib/api/v1/InterviewFiles";
 import {FolderCopy, Star} from '@mui/icons-material';
 import List from '@mui/icons-material/List';
+import {useMutation} from "@tanstack/react-query";
 
 import {toast} from "sonner";
 
@@ -11,8 +13,8 @@ export interface InterviewPartCardProps {
     onChange?: (is_primary: boolean, is_duplicate: boolean) => void;
 }
 
-function updateInterviewPart(
-    props: Omit<InterviewPartCardProps,"is_primary"|"is_duplicate">,
+async function updateInterviewPart(
+    props: Omit<InterviewPartCardProps, "is_primary" | "is_duplicate">,
     is_primary: boolean,
     is_duplicate: boolean,
 ): Promise<void> {
@@ -53,10 +55,10 @@ export default function InterviewPartCard({
                                               ...props
                                           }: InterviewPartCardProps) {
 
-    if (!props.interview_path) {
-        return null;
-    }
     const interview_part_name = props.interview_path.split('/').pop();
+    const mutate = useMutation({
+        ...mutations.setIgnore
+    });
 
     return (
         <div className="border border-gray-800 rounded p-4">
