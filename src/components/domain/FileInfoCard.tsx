@@ -1,4 +1,8 @@
 "use client"
+import v2Interviews from "@/lib/api/v2/interviews";
+import {File} from "@/lib/types/file";
+import {InterviewFile} from "@/lib/types/interview";
+import {useMutation} from "@tanstack/react-query";
 import * as React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -27,20 +31,14 @@ import { toast } from "sonner";
 const { Paragraph } = Typography;
 
 
-export type FileInfoCardProps = {
+export interface FileInfoCardProps extends File, Omit<InterviewFile, "interview_file"|"interview_file_tags"> {
     interview_name: string;
-    file_path: string;
-    file_name: string;
-    file_size_mb: number;
-    m_time: Date;
-    md5: string | null;
     tags: string[];
-    ignored: boolean;
     onTagsChange?: (tags: string[]) => void;
     onIgnoredChange?: (ignored: boolean) => void;
     currentAudioTime?: number;
     setCurrentAudioTime?: (time: number) => void;
-};
+}
 
 FileInfoCard.defaultProps = {
     md5: null,
@@ -82,7 +80,7 @@ function removeRoles(
     })
 
     return Promise.resolve();
-};
+}
 
 function setRole(
     props: FileInfoCardProps,
@@ -152,7 +150,10 @@ async function toggleIgnored(props: FileInfoCardProps): Promise<void> {
 }
 
 export default function FileInfoCard(props: FileInfoCardProps) {
-    const { currentAudioTime } = props;
+    const { currentAudioTime,file_path,interview_name } = props;
+    const clearTags = useMutation(v2Interviews.mutations.interviewClearAudioRole(interview_name,file_path));
+
+
 
     React.useEffect(() => {
         if (currentAudioTime) {

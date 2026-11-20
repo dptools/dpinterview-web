@@ -1,4 +1,5 @@
-import { DbFile } from '@/lib/types/file';
+import {isoDatetimeToDate} from "@/lib/api";
+import { DbFile, File as ApiFile } from '@/lib/types/file';
 import {z} from "zod";
 
 export type DbInterview = {
@@ -74,7 +75,7 @@ export type DbTranscriptFiles = {
 
 export type InterviewTranscriptFile = {
     interview_name: string;
-    transcript_file: DbFile;
+    transcript_file: ApiFile;
     transcript_file_tags: string[];
 }
 
@@ -86,7 +87,7 @@ export type DbInterviewFile = {
 };
 
 export type InterviewFile = {
-    interview_file: DbFile;
+    interview_file: ApiFile;
     interview_file_tags: string[];
     ignored: boolean;
 };
@@ -124,3 +125,36 @@ export type InterviewProcessingData = {
         timestamp: Date;
     } | null;
 };
+
+
+export const InterviewFile = z.toZod<InterviewFile>()(z.object({
+    interview_file: ApiFile,
+    interview_file_tags: z.array(z.string()),
+    ignored: z.boolean(),
+}));
+
+export const InterviewTranscriptFile = z.toZod<InterviewTranscriptFile>()(z.object({
+    interview_name: z.string(),
+    transcript_file: ApiFile,
+    transcript_file_tags: z.array(z.string()),
+}));
+
+export const InterviewPart = z.toZod<InterviewPart>()(z.object({
+    interview_path: z.string(),
+    interview_name: z.string(),
+    interview_day: z.number(),
+    interview_part: z.number(),
+    interview_datetime: isoDatetimeToDate,
+    is_primary: z.boolean(),
+    is_duplicate: z.boolean(),
+    interview_files: z.array(InterviewFile),
+}));
+
+export const Interview = z.toZod<Interview>()(z.object({
+    interview_name: z.string(),
+    interview_type: z.string(),
+    subject_id: z.string(),
+    study_id: z.string(),
+    parts: z.array(InterviewPart),
+    transcript_files: z.array(InterviewTranscriptFile),
+}));

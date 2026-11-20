@@ -24,3 +24,13 @@ export function V1Response<T extends z.ZodType>(schema: T) {
 
 export const InterviewsResponse = V1Response(DbInterview);
 export type InterviewsResponse = z.infer<typeof InterviewsResponse>;
+
+
+export const AudioTagClearUpdate = z.object({
+    audio_path: z.string(),
+    role: z.string(),
+})
+
+export const AudioTagClearRequest = z.object({
+    audio_path: z.string(),
+})

@@ -1,35 +1,22 @@
-import { Interviews } from "@/lib/models/Interviews";
+import {Interviews} from "@/lib/models/Interviews";
+import {notFound} from "next/navigation";
+import {NextResponse} from "next/server";
 
 export async function GET(
-    request: Request, 
-    props: { params: Promise<{ interview_name: string }> }
-): Promise<Response> {
-    const params = await props.params;
-    const interview_name = params.interview_name;
+    _request: Request,
+    ctx: RouteContext<'/api/v2/interviews/[interview_name]/info'>
+): Promise<NextResponse> {
+    const {interview_name} = await ctx.params;
 
     if (!interview_name) {
-        return new Response(JSON.stringify({ error: 'Missing name parameter' }), {
-            status: 400,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        return NextResponse.json({error: 'Missing name parameter'}, {status: 400});
     }
 
     const interviews = await Interviews.get(interview_name);
 
     if (!interviews) {
-        return new Response(JSON.stringify({ error: 'Interview not found' }), {
-            status: 404,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        notFound();
     }
 
-    return new Response(JSON.stringify(interviews), {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
+    return NextResponse.json(interviews);
 }

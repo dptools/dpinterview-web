@@ -17,10 +17,14 @@ export async function fetcher<T extends z.ZodType>(schema: T, url: URL | string)
         throw new ApiError(result.status, "Error fetching data");
     }
     const jsonData = await result.json();
-    const parseResult = await schema.safeParseAsync(jsonData);
+    const parseResult = await schema.safeDecodeAsync(jsonData);
     if (!parseResult.success) {
         throw new ApiError(500, parseResult.error.message);
     }
     return parseResult.data;
 }
 
+export const isoDatetimeToDate = z.codec(z.iso.datetime(), z.date(), {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+});

@@ -1,6 +1,4 @@
 "use client"
-import { useEffect, useState } from 'react';
-
 import { Descriptions } from 'antd';
 import type { DescriptionsProps } from 'antd';
 import { Empty } from 'antd';
@@ -10,56 +8,13 @@ import {Badge} from "@/components/ui/badge";
 
 import { TranscriptionPipelineStatus as StatusType } from '@/lib/types/transcribeme';
 
-export type TranscriptionPipelineStatusProps = {
-    identifier: string;
-    identifier_type: 'interview' | 'audio_journal';
-    study_id?: string;
-    subject_id?: string;
-};
+export function TranscriptionPipelineStatusSkeleton(){
+    return <Skeleton variant="rectangular" height={300} sx={{ mt: 2 }} />;
+}
 
-export default function TranscriptionPipelineStatus(props: TranscriptionPipelineStatusProps) {
-    const { identifier, identifier_type, study_id, subject_id } = props;
-    const [status, setStatus] = useState<StatusType | null>(null);
-    const [loading, setLoading] = useState(true);
+export default function TranscriptionPipelineStatus({status}:{status: StatusType}) {
 
-    useEffect(() => {
-        const fetchInterviewStatus = async (interviewName: string) => {
-            const res = await fetch(`/api/v2/interviews/${interviewName}/transcription-status`);
-            if (res.ok) {
-                setStatus(await res.json());
-            }
-            setLoading(false);
-        };
-
-        const fetchJournalStatus = async (studyId: string, subjectId: string, journalName: string) => {
-            const res = await fetch(
-                `/api/v3/studies/${studyId}/subjects/${subjectId}/audioJournals/${journalName}/transcription-status`
-            );
-            if (res.ok) {
-                setStatus(await res.json());
-            }
-            setLoading(false);
-        };
-
-        if (!identifier) {
-            return;
-        }
-        if (identifier_type === 'interview') {
-            fetchInterviewStatus(identifier);
-        } else if (identifier_type === 'audio_journal') {
-            if (!study_id || !subject_id) {
-                setLoading(false);
-                return;
-            }
-            fetchJournalStatus(study_id, subject_id, identifier);
-        }
-    }, [identifier, identifier_type, study_id, subject_id]);
-
-    if (loading) {
-        return <Skeleton variant="rectangular" height={300} sx={{ mt: 2 }} />;
-    }
-
-    if (!status || !status.wav_conversion) {
+    if (!status.wav_conversion) {
         return (
             <div className="m-16">
                 <Empty description="This recording has not entered the dpinterview transcription pipeline yet" />

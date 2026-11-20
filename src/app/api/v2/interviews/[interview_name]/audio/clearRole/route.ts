@@ -1,29 +1,32 @@
-import { InterviewFiles } from "@/lib/models/InterviewFiles";
-import { DashboardActions } from "@/lib/models/DashboardActions";
+import {DashboardActions} from "@/lib/models/DashboardActions";
+import {InterviewFiles} from "@/lib/models/InterviewFiles";
+import {NextResponse} from "next/server";
+import {z} from "zod";
+
+export const AudioTagClearRequest = z.object({
+    audio_path: z.string(),
+});
+
+export const AudioTagClearResponse = z.object({
+    message: z.string(),
+    new_tags: z.string(),
+})
+
+export type AudioTagClearResponse = z.infer<typeof AudioTagClearResponse>;
 
 export async function POST(
     request: Request,
-    props: { params: Promise<{ interview_name: string }> }
+    ctx: RouteContext<"/api/v2/interviews/[interview_name]/audio/clearRole">,
 ): Promise<Response> {
-    const params = await props.params;
-    const interview_name = params.interview_name;
+    const {interview_name} = await ctx.params;
 
     const body = await request.json();
-    const audio_path: string = body.audio_path;
-
-    if (audio_path === undefined) {
-        return new Response(
-            JSON.stringify({
-                error: "Missing audio_path parameter",
-            }),
-            {
-                status: 400,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+    const parseResult = await AudioTagClearRequest.safeDecodeAsync(body);
+    if (!parseResult.success) {
+        return NextResponse.json(parseResult.error, {status: 400,})
     }
+
+    const {audio_path} = parseResult.data;
 
     await DashboardActions.recordAction(
         interview_name,
@@ -32,21 +35,14 @@ export async function POST(
         "audio_path"
     )
 
-
     const newTags = await InterviewFiles.removeRoleTag(
         audio_path,
-    )
-
-    return new Response(
-        JSON.stringify({
-            message: "Role cleared successfully",
-            new_tags: newTags,
-        }),
-        {
-            status: 200,
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
     );
+
+    const response = AudioTagClearResponse.parse({
+        message: "Role cleared successfully",
+        new_tags: newTags
+    });
+
+    return NextResponse.json(response);
 }

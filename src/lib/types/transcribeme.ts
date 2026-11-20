@@ -1,10 +1,20 @@
 // transcribeme.wav_conversion
+import {isoDatetimeToDate} from "@/lib/api";
+import {z} from "zod";
+
 export type DbWavConversion = {
     wc_source_path: string;
     wc_destination_path: string;
     wc_duration_s: number;
     wc_timestamp: Date;
 };
+
+export const DbWavConversion = z.toZod<DbWavConversion>()(z.object({
+    wc_source_path: z.string(),
+    wc_destination_path: z.string(),
+    wc_duration_s: z.number(),
+    wc_timestamp: z.date(),
+}));
 
 // transcribeme.audio_qc
 export type DbAudioQc = {
@@ -17,6 +27,16 @@ export type DbAudioQc = {
     aqc_override: boolean;
 };
 
+export const DbAudioQc = z.toZod<DbAudioQc>()(z.object({
+    aqc_source_path: z.string(),
+    aqc_passed: z.boolean(),
+    aqc_metrics: z.record(z.string(), z.number()),
+    aqc_fail_reasons: z.record(z.string(), z.boolean()).nullable(),
+    aqc_duration_s: z.number(),
+    aqc_timestamp: z.date(),
+    aqc_override: z.boolean(),
+}));
+
 // transcribeme.transcribeme_push
 export type DbTranscribemePush = {
     transcription_source_path: string;
@@ -27,6 +47,15 @@ export type DbTranscribemePush = {
     sftp_upload_timestamp: Date;
 };
 
+export const DbTranscribemePush = z.toZod<DbTranscribemePush>()(z.object({
+    transcription_source_path: z.string(),
+    source_language: z.string(),
+    sftp_upload_path: z.string(),
+    transcription_destination_path: z.string(),
+    sftp_upload_duration_s: z.number(),
+    sftp_upload_timestamp: z.date(),
+}));
+
 // transcribeme.transcribeme_pull
 export type DbTranscribemePull = {
     transcription_destination_path: string;
@@ -36,6 +65,15 @@ export type DbTranscribemePull = {
     sftp_download_timestamp: Date;
     completed_audio_file_path: string;
 };
+
+export const DbTranscribemePull = z.toZod<DbTranscribemePull>()(z.object({
+    transcription_destination_path: z.string(),
+    sftp_download_path: z.string(),
+    sftp_archive_path: z.string(),
+    sftp_download_duration_s: z.number(),
+    sftp_download_timestamp: z.date(),
+    completed_audio_file_path: z.string(),
+}));
 
 // Every transcribeme.* row traces back to either a combined interview audio
 // file or an audio journal - the two identifier trees join back differently
@@ -88,3 +126,17 @@ export type TranscriptionPipelineStatus = {
     push: DbTranscribemePush | null;
     pull: DbTranscribemePull | null;
 };
+
+export const TranscriptionPipelineStatus = z.toZod<TranscriptionPipelineStatus>()(z.object({
+    wav_conversion: DbWavConversion.nullable(),
+    audio_qc: DbAudioQc.nullable(),
+    push: DbTranscribemePush.nullable(),
+    pull: DbTranscribemePull.nullable(),
+}));
+
+
+export const ApiDbWavConversion = z.object({
+    ...DbWavConversion.omit({wc_timestamp: true}).shape,
+    wc_timestamp: isoDatetimeToDate,
+});
+

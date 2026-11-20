@@ -1,7 +1,8 @@
-import { getConnection } from "@/lib/db";
+import { connection } from "@/lib/db";
 
 import { DbFile } from "@/lib/types/file";
 import { DbInterviewFile, InterviewFile } from "@/lib/types/interview";
+import sql from "sql-template-tag";
 
 type InterviewFileJoinFile = DbInterviewFile & DbFile;
 
@@ -9,16 +10,14 @@ const availableRoles = ['interviewer', 'participant', 'combined', 'uncategorized
 
 export class InterviewFiles {
     static async get(interview_path: string): Promise<InterviewFile[]> {
-        const connection = getConnection();
-        const results = await connection.query(
-            `
+
+        const results = await connection.query<InterviewFileJoinFile>(
+            sql`
             SELECT *
             FROM interview_files
             LEFT JOIN files ON interview_file = file_path
-            WHERE interview_path = $1
-            `,
-            [interview_path]
-        );
+            WHERE interview_path = ${interview_path}
+            `);
         return results.rows.map((row: InterviewFileJoinFile) => {
             const interview_file_tags = row.interview_file_tags.split(',').map((tag: string) => tag.trim());
             return {
@@ -37,16 +36,13 @@ export class InterviewFiles {
     }
 
     static async getInterviewName(file_path: string): Promise<string | null> {
-        const connection = getConnection();
         const result = await connection.query(
-            `
+            sql`
             SELECT interview_name
             FROM interview_files
             LEFT JOIN interview_parts USING (interview_path)
-            WHERE interview_file = $1
-            `,
-            [file_path]
-        );
+            WHERE interview_file = ${file_path}
+            `);
         if (result.rows.length > 0) {
             return result.rows[0].interview_name;
         }
@@ -54,15 +50,13 @@ export class InterviewFiles {
     }
 
     static async addRoleTag(file_path: string, role: string): Promise<string> {
-        const connection = getConnection();
-        const currentRoleQuery = `
-            SELECT interview_file_tags
+
+        const currentRoleQuery = sql`
+            SELECT string_to_array(interview_file_tags,',') as interview_file_tags
             FROM interview_files
-            WHERE interview_file = $1
-        `;
-        const currentRoleResult = await connection.query(currentRoleQuery, [file_path]);
-        const currentRoleRow = currentRoleResult.rows[0];
-        const currentTags = currentRoleRow ? currentRoleRow.interview_file_tags.split(',').map((tag: string) => tag.trim()) : [];
+            WHERE interview_file = ${file_path}`;
+        const currentRoleResult = await connection.query<{interview_file_tags:string[]}>(currentRoleQuery);
+        const currentTags = currentRoleResult.rows[0].interview_file_tags;
 
         // Remove existing role tag if it exists
         let updatedTags = currentTags.filter((tag: string) => !availableRoles.some((role: string) => tag.toLowerCase().includes(role)));
@@ -99,33 +93,33 @@ export class InterviewFiles {
     }
 
     static async removeRoleTag(file_path: string): Promise<string> {
-        const connection = getConnection();
-        const currentRolwQuery = `
-            SELECT interview_file_tags
+
+        // Perform tag split inside PostgreSQL
+        const currentRoleQuery = sql`
+            SELECT string_to_array(interview_file_tags,',')
             FROM interview_files
-            WHERE interview_file = $1
+            WHERE interview_file = ${file_path}
         `;
-        const currentRoleResult = await connection.query(currentRolwQuery, [file_path]);
-        const currentRoleRow = currentRoleResult.rows[0];
-        const currentTags = currentRoleRow ? currentRoleRow.interview_file_tags.split(',').map((tag: string) => tag.trim()) : [];
+        const currentRoleResult = await connection.query<string[]>(currentRoleQuery);
+        const currentTags = currentRoleResult.rows[0];
 
         // Remove existing role tag if it exists
         const updatedTags = currentTags.filter((tag: string) => !availableRoles.some((role: string) => tag.toLowerCase().includes(role)));
         // Mark as uncategorized
         updatedTags.push('uncategorized');
-        const updatedTagsString: string = updatedTags.join(',');
 
-        const updateQuery = `
+        // Perform tag merge inside PostgreSQL
+        const updateQuery = sql`
             UPDATE interview_files
-            SET interview_file_tags = $1
-            WHERE interview_file = $2
+            SET interview_file_tags = array_to_string(${updatedTags},',')
+            WHERE interview_file = ${file_path}
         `;
-        await connection.query(updateQuery, [updatedTagsString, file_path]);
-        return updatedTagsString;
+        await connection.query(updateQuery);
+        return updatedTags.join(",");
     }
 
     static async setIgnoreFile(file_path: string, ignored: boolean): Promise<void> {
-        const connection = getConnection();
+
         const updateQuery = `
             UPDATE interview_files
             SET ignored = $1

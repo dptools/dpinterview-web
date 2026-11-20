@@ -1,4 +1,9 @@
 "use client"
+import {Alert, AlertDescription} from "@/components/ui/alert";
+import {Skeleton} from "@/components/ui/skeleton";
+import {studyQueries} from "@/lib/api/v3/studies";
+import {useQuery} from "@tanstack/react-query";
+import {use} from "react";
 import * as React from 'react';
 import Link from 'next/link';
 
@@ -14,9 +19,10 @@ import {
     TabsContent,
 } from "@/components/ui/tabs";
 
-import { DbAudioJournal } from '@/lib/types/audio_journals';
 import Transcript from '@/components/domain/TranscriptE';
-import TranscriptionPipelineStatus from '@/components/domain/TranscriptionPipelineStatus';
+import TranscriptionPipelineStatus, {
+    TranscriptionPipelineStatusSkeleton
+} from '@/components/domain/TranscriptionPipelineStatus';
 
 import { toast } from "sonner";
 
@@ -29,69 +35,11 @@ export default function Page({
         journal_name: string;
     }>
 }) {
-    const [study_id, setStudyId] = React.useState<string>('');
-    const [subject_id, setSubjectId] = React.useState<string>('');
-    const [journal_name, setJournalName] = React.useState<string>('');
-    const [journalData, setJournalData] = React.useState<DbAudioJournal | null>(null);
-    const [descriptionItems, setDescriptionItems] = React.useState<DescriptionsProps['items']>([]);
-    const [currenntAudioTime, setCurrentAudioTime] = React.useState<number>(0);
+    const {study_id: studyId, subject_id: subjectId,journal_name: journalName} = use(params);
+    const [currentAudioTime, setCurrentAudioTime] = React.useState<number>(0);
 
-    React.useEffect(() => {
-        const fetchData = async () => {
-            const { study_id, subject_id, journal_name } = await params;
-            setStudyId(study_id);
-            setSubjectId(subject_id);
-            setJournalName(journal_name);
-
-            const response = await fetch(`/api/v3/studies/${study_id}/subjects/${subject_id}/audioJournals/${journal_name}`);
-
-            if (!response.ok) {
-                console.error('Failed to fetch journal data');
-                throw new Error('Failed to fetch journal data');
-            }
-            const data = await response.json();
-            setJournalData(data);
-        }
-        fetchData();
-    }, [study_id, subject_id, journal_name, params]);
-
-    React.useEffect(() => {
-        if (!journalData) return;
-
-        const items: DescriptionsProps['items'] = [
-            {
-                label: 'Journal Name',
-                children: journalData.aj_name,
-            },
-            {
-                label: 'Study ID',
-                children: journalData.study_id,
-            },
-            {
-                label: 'Journal Day',
-                children: journalData.aj_day,
-            },
-            {
-                label: 'Journal Session',
-                children: journalData.aj_session,
-            },
-            {
-                label: 'Journal DateTime',
-                children: new Date(journalData.aj_datetime).toISOString().replace('T', ' ').substring(0, 19),
-            },
-            {
-                label: 'Subject ID',
-                children: (
-                    <Link href={`/studies/${journalData.study_id}/subjects/${journalData.subject_id}`}>
-                        {journalData.subject_id}
-                    </Link>
-                ),
-            },
-        ];
-
-        setDescriptionItems(items);
-    }, [journalData]);
-
+    const journalFetch = useQuery(studyQueries.studySubjectAudioJournal(studyId,subjectId,journalName));
+    const journalTranscriptionFetch = useQuery(studyQueries.studySubjectAudioJournalTranscriptionStatus(studyId,subjectId,journalName));
 
     function updateAudioTime(newTime: number) {
         const audio = document.querySelector('audio');
@@ -100,23 +48,79 @@ export default function Page({
         }
     }
 
-    return (
+    if(journalFetch.isError || journalTranscriptionFetch.isError) return (
+        <Alert>
+            <AlertDescription>error fetching audio journal data </AlertDescription>
+            <AlertDescription>
+                {journalFetch.error && (
+                    <div>
+                    {journalFetch.error.message}
+                    </div>
+                )}
+                {journalTranscriptionFetch.error && (
+                    <div>
+                        {journalTranscriptionFetch.error.message}
+                    </div>
+                )}
+            </AlertDescription>
+        </Alert>
+    );
+
+    if(journalFetch.isLoading || journalTranscriptionFetch.isLoading) return (
         <div className="container mx-auto p-4">
             <div className='mb-32'>
-                <Descriptions
-                    title="Journal Info"
-                    bordered
-                    column={{ xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2 }}
-                    size='small'
-                    items={descriptionItems}
-                />
+                Loading audio journal {journalName} for {subjectId} {studyId}.
+                <Skeleton />
+            </div>
+        </div>
+    );
 
-                {journalData && (
+    if(journalFetch.isSuccess) {
+
+        const descriptionItems: DescriptionsProps['items'] = [
+            {
+                label: 'Journal Name',
+                children: journalFetch.data.aj_name,
+            },
+            {
+                label: 'Study ID',
+                children: journalFetch.data.study_id,
+            },
+            {
+                label: 'Journal Day',
+                children: journalFetch.data.aj_day,
+            },
+            {
+                label: 'Journal Session',
+                children: journalFetch.data.aj_session,
+            },
+            {
+                label: 'Journal DateTime',
+                children: new Date(journalFetch.data.aj_datetime).toISOString().replace('T', ' ').substring(0, 19),
+            },
+            {
+                label: 'Subject ID',
+                children: (
+                    <Link href={`/studies/${studyId}/subjects/${subjectId}`}>{subjectId}</Link>
+                ),
+            },
+        ];
+
+        return (
+            <div className="container mx-auto p-4">
+                <div className='mb-32'>
+                    <Descriptions
+                        title="Journal Info"
+                        bordered
+                        column={{xs: 1, sm: 1, md: 1, lg: 2, xl: 2, xxl: 2}}
+                        size='small'
+                        items={descriptionItems}
+                    />
                     <div className="flex justify-center my-4">
                         <audio
-                            src={`http://localhost:45000/payload=%5B${journalData.aj_path}%5D`}
+                            src={`http://localhost:45000/payload=%5B${journalFetch.data.aj_path}%5D`}
                             controls
-                            style={{ width: '100%' }}
+                            style={{width: '100%'}}
                             onError={() => {
                                 toast.error("Failed to load audio file. The file may be missing or the media server is not running.");
                             }}
@@ -126,43 +130,42 @@ export default function Page({
                             }}
                         />
                     </div>
-                )}
+                    <p className={"typeset typeset-title-lg mt-3"}>
+                        <strong>Further Information</strong>
+                    </p>
 
-                <p className={"typeset typeset-title-lg mt-3"}>
-                    <strong>Further Information</strong>
-                </p>
-
-                <Box>
-                    <Tabs aria-label="Basic tabs" defaultValue={"transcript"} className={"mt-3"}>
-                        <TabsList>
-                            <TabsTrigger value={"transcript"}>📄 Transcript</TabsTrigger>
-                            <TabsTrigger value={"pipeline"}>🔊 Transcription Pipeline</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value={"transcript"}>
-                            <Transcript
-                                identifier={journal_name}
-                                identifier_type='audio_journal'
-                                subject_id={subject_id}
-                                study_id={study_id}
-                                currentAudioTime={currenntAudioTime}
-                                updateAudioTime={updateAudioTime}
-                            />
-                        </TabsContent>
-                        <TabsContent value={"pipeline"}>
-                            <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3 mb-2"}>
-                                <strong>Transcription Pipeline</strong>
-                            </p>
-
-                            <TranscriptionPipelineStatus
-                                identifier={journal_name}
-                                identifier_type='audio_journal'
-                                study_id={study_id}
-                                subject_id={subject_id}
-                            />
-                        </TabsContent>
-                    </Tabs>
-                </Box>
+                    <Box>
+                        <Tabs aria-label="Basic tabs" defaultValue={"transcript"} className={"mt-3"}>
+                            <TabsList>
+                                <TabsTrigger value={"transcript"}>📄 Transcript</TabsTrigger>
+                                <TabsTrigger value={"pipeline"}>🔊 Transcription Pipeline</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value={"transcript"}>
+                                <Transcript
+                                    identifier={journalName}
+                                    identifier_type='audio_journal'
+                                    subject_id={subjectId}
+                                    study_id={studyId}
+                                    currentAudioTime={currentAudioTime}
+                                    updateAudioTime={updateAudioTime}
+                                />
+                            </TabsContent>
+                            <TabsContent value={"pipeline"}>
+                                <p className={"typeset typeset-title-lg text-(--mui-palette-text-secondary) mt-3 mb-2"}>
+                                    <strong>Transcription Pipeline</strong>
+                                </p>
+                                {journalTranscriptionFetch.isSuccess ? (
+                                    <TranscriptionPipelineStatus
+                                        status={journalTranscriptionFetch.data}
+                                    />
+                                ) : (
+                                    <TranscriptionPipelineStatusSkeleton/>
+                                )}
+                            </TabsContent>
+                        </Tabs>
+                    </Box>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 }
